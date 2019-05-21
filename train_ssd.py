@@ -102,7 +102,9 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 args = parser.parse_args()
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() and args.use_cuda else "cpu")
-
+# DEVICE = torch.device("cuda" if torch.cuda.is_available() and args.use_cuda else "cpu")
+print(DEVICE)
+print(torch.cuda.is_available())
 if args.use_cuda and torch.cuda.is_available():
     torch.backends.cudnn.benchmark = True
     logging.info("Use Cuda.")
@@ -226,7 +228,8 @@ if __name__ == '__main__':
     logging.info("Train dataset size: {}".format(len(train_dataset)))
     train_loader = DataLoader(train_dataset, args.batch_size,
                               num_workers=args.num_workers,
-                              shuffle=True)
+                              shuffle=True,
+                              pin_memory=True)
     logging.info("Prepare Validation datasets.")
     if args.dataset_type == "voc":
         val_dataset = VOCDataset(args.validation_dataset, transform=test_transform,
@@ -240,7 +243,8 @@ if __name__ == '__main__':
 
     val_loader = DataLoader(val_dataset, args.batch_size,
                             num_workers=args.num_workers,
-                            shuffle=False)
+                            shuffle=False,
+                            pin_memory=True)
     logging.info("Build network.")
     net = create_net(num_classes)
     min_loss = -10000.0
@@ -293,7 +297,7 @@ if __name__ == '__main__':
         logging.info(f"Init from pretrained ssd {args.pretrained_ssd}")
         net.init_from_pretrained_ssd(args.pretrained_ssd)
     logging.info(f'Took {timer.end("Load Model"):.2f} seconds to load the model.')
-
+    
     net.to(DEVICE)
 
     criterion = MultiboxLoss(config.priors, iou_threshold=0.5, neg_pos_ratio=3,
