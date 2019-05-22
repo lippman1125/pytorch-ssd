@@ -109,7 +109,11 @@ class SSD(nn.Module):
         return confidence, location
 
     def init_from_base_net(self, model):
-        self.base_net.load_state_dict(torch.load(model, map_location=lambda storage, loc: storage), strict=False)
+        checkpoint = torch.load(model, map_location=lambda storage, loc: storage)
+        model_dict = self.base_net.base_net.state_dict()
+        for k in checkpoint['net'].keys():
+            model_dict[k.replace('module.features.', '')] = checkpoint['net'][k]
+        self.base_net.load_state_dict(model_dict, strict=False)
         self.source_layer_add_ons.apply(_xavier_init_)
         self.extras.apply(_xavier_init_)
         self.classification_headers.apply(_xavier_init_)
