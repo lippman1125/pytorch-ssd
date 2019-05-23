@@ -110,7 +110,7 @@ class SSD(nn.Module):
 
     def init_from_base_net(self, model):
         checkpoint = torch.load(model, map_location=lambda storage, loc: storage)
-        model_dict = self.base_net.base_net.state_dict()
+        model_dict = self.base_net.state_dict()
         for k in checkpoint['net'].keys():
             model_dict[k.replace('module.features.', '')] = checkpoint['net'][k]
         self.base_net.load_state_dict(model_dict, strict=False)
