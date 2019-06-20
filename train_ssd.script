@@ -1,0 +1,11 @@
+CUDA_VISIBLE_DEVICES=1 python3 train_ssd.py --dataset_type voc  \
+                                            --datasets ./VOCdevkit/VOC2007/ ./VOCdevkit/VOC2012/ \
+                                            --validation_dataset ./VOCdevkit/VOC2007/ \
+                                            --net mb2-ssd-lite-xiaomi \
+                                            --base_net models/mv2.pth \
+                                            --scheduler cosine \
+                                            --lr 0.01 \
+                                            --t_max 200 \
+                                            --validation_epochs 5 \
+                                            --num_epochs 200 \
+                                            --num_workers 24

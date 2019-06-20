@@ -1,0 +1,5 @@
+CUDA_VISIBLE_DEVICES=1 python3 eval_ssd.py  --dataset ./VOCdevkit/VOC2007/ \
+                                            --net mb2-ssd-lite-xiaomi \
+                                            --trained_model models/mb2-ssd-lite-xiaomi-Epoch-199-Loss-2.783321311396937.pth \
+                                            --label_file models/voc-model-labels.txt
+                                               
