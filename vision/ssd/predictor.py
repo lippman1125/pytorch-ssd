@@ -3,6 +3,7 @@ import torch
 from ..utils import box_utils
 from .data_preprocessing import PredictionTransform
 from ..utils.misc import Timer
+# from ..utils.nms_gpu.nms.gpu_nms import gpu_nms
 
 
 class Predictor:
@@ -59,6 +60,14 @@ class Predictor:
                                       sigma=self.sigma,
                                       top_k=top_k,
                                       candidate_size=self.candidate_size)
+            # convert tensor to numpy
+            # box_probs[:, 0] *= width
+            # box_probs[:, 1] *= height
+            # box_probs[:, 2] *= width
+            # box_probs[:, 3] *= height
+            # keep_id = gpu_nms(box_probs.numpy(), 0.45, device_id = 0)
+            # keep_id = keep_id[:200]
+            # box_probs = box_probs[keep_id, :]
             picked_box_probs.append(box_probs)
             picked_labels.extend([class_index] * box_probs.size(0))
         if not picked_box_probs:
