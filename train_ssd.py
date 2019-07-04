@@ -15,6 +15,8 @@ from vision.ssd.mobilenetv1_ssd import create_mobilenetv1_ssd
 from vision.ssd.mobilenetv1_ssd_lite import create_mobilenetv1_ssd_lite
 from vision.ssd.mobilenet_v2_ssd_lite import create_mobilenetv2_ssd_lite
 from vision.ssd.mobilenet_v2_ssd_lite_xiaomi import create_mobilenetv2_ssd_lite_xiaomi
+from vision.ssd.fairnas_a_ssd_lite import create_fairnas_a_ssd_lite
+from vision.ssd.fairnas_b_ssd_lite import create_fairnas_b_ssd_lite
 from vision.ssd.squeezenet_ssd_lite import create_squeezenet_ssd_lite
 from vision.datasets.voc_dataset import VOCDataset
 from vision.datasets.open_images import OpenImagesDataset
@@ -191,6 +193,12 @@ if __name__ == '__main__':
         config = mobilenetv1_ssd_config
     elif args.net == 'mb2-ssd-lite-xiaomi':
         create_net = lambda num: create_mobilenetv2_ssd_lite_xiaomi(num, width_mult=args.mb2_width_mult)
+        config = mobilenetv1_ssd_config
+    elif args.net == 'fairnas-a-ssd-lite':
+        create_net = lambda num: create_fairnas_a_ssd_lite(num)
+        config = mobilenetv1_ssd_config
+    elif args.net == 'fairnas-b-ssd-lite':
+        create_net = lambda num: create_fairnas_b_ssd_lite(num)
         config = mobilenetv1_ssd_config
     else:
         logging.fatal("The net type is wrong.")
