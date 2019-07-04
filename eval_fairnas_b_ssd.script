@@ -1,0 +1,5 @@
+CUDA_VISIBLE_DEVICES=0 python3 eval_ssd.py  --dataset ./VOCdevkit/VOC2007/ \
+                                            --net fairnas-b-ssd-lite \
+                                            --trained_model models/fairnas-b-ssd-lite-best.pth \
+                                            --label_file models/voc-model-labels.txt
+                                               
