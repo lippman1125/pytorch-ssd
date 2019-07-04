@@ -98,7 +98,6 @@ class SSD(nn.Module):
             return confidences, locations
 
     def compute_header(self, i, x):
-        print(x.size())
         confidence = self.classification_headers[i](x)
         confidence = confidence.permute(0, 2, 3, 1).contiguous()
         confidence = confidence.view(confidence.size(0), -1, self.num_classes)
