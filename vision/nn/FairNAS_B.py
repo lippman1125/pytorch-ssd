@@ -135,6 +135,7 @@ class FairNasB(nn.Module):
         # self.stem = stem(3, 32, 2)
         # self.separable_conv = separable_conv(32, 16)
         # self.mb_module = list()
+        self.features = list()
         self.features.append(stem(3, 32, 2))
         self.features.append(separable_conv(32, 16))
         for t, c, k, s in mb_config:

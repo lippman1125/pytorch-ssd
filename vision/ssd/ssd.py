@@ -98,6 +98,7 @@ class SSD(nn.Module):
             return confidences, locations
 
     def compute_header(self, i, x):
+        print(x.size())
         confidence = self.classification_headers[i](x)
         confidence = confidence.permute(0, 2, 3, 1).contiguous()
         confidence = confidence.view(confidence.size(0), -1, self.num_classes)
@@ -111,8 +112,82 @@ class SSD(nn.Module):
     def init_from_base_net(self, model):
         checkpoint = torch.load(model, map_location=lambda storage, loc: storage)
         model_dict = self.base_net.state_dict()
+        # for k in model_dict.keys():
+        #    print(k)
+        # for k in checkpoint['net'].keys():
+        #    print(k)
         for k in checkpoint['net'].keys():
             model_dict[k.replace('module.features.', '')] = checkpoint['net'][k]
+        self.base_net.load_state_dict(model_dict, strict=False)
+        self.source_layer_add_ons.apply(_xavier_init_)
+        self.extras.apply(_xavier_init_)
+        self.classification_headers.apply(_xavier_init_)
+        self.regression_headers.apply(_xavier_init_)
+
+    def init_from_fairnas_a_base_net(self, model):
+        checkpoint = torch.load(model, map_location=lambda storage, loc: storage)
+        model_dict = self.base_net.state_dict()
+
+        f_key = open("./models/fairnas_a_model_key.txt", 'r')
+        if f_key is None:
+            exit()
+        else:
+            model_keys = f_key.readlines()
+        f_key.close()
+
+        f_key = open("./models/fairnas_a_ckpt_key.txt", 'r')
+        if f_key is None:
+            exit()
+        else:
+            ckpt_keys = f_key.readlines()
+        f_key.close()
+
+        for idx, key in enumerate(model_keys):
+            # print(key.strip('\n'), ckpt_keys[idx].strip('\n'))
+            model_dict[key.strip('\n')] = checkpoint['model_state'][ckpt_keys[idx].strip('\n')]
+        # for k in model_dict.keys():
+        #   print(k)
+        # for k in checkpoint['model_state'].keys():
+        #   print(k)
+        # for k in checkpoint['net'].keys():
+        #     model_dict[k.replace('module.features.', '')] = checkpoint['net'][k]
+        self.base_net.load_state_dict(model_dict, strict=False)
+        self.source_layer_add_ons.apply(_xavier_init_)
+        self.extras.apply(_xavier_init_)
+        self.classification_headers.apply(_xavier_init_)
+        self.regression_headers.apply(_xavier_init_)
+
+    def init_from_fairnas_b_base_net(self, model):
+        checkpoint = torch.load(model, map_location=lambda storage, loc: storage)
+        model_dict = self.base_net.state_dict()
+        # for k in model_dict.keys():
+        #     print(k)
+        # for k in checkpoint['model_state'].keys():
+        #     print(k)
+
+        f_key = open("./models/fairnas_b_model_key.txt", 'r')
+        if f_key is None:
+            exit()
+        else:
+            model_keys = f_key.readlines()
+        f_key.close()
+
+        f_key = open("./models/fairnas_b_ckpt_key.txt", 'r')
+        if f_key is None:
+            exit()
+        else:
+            ckpt_keys = f_key.readlines()
+        f_key.close()
+
+        for idx, key in enumerate(model_keys):
+            # print(key.strip('\n'), ckpt_keys[idx].strip('\n'))
+            model_dict[key.strip('\n')] = checkpoint['model_state'][ckpt_keys[idx].strip('\n')]
+        # for k in model_dict.keys():
+        #   print(k)
+        # for k in checkpoint['model_state'].keys():
+        #   print(k)
+        # for k in checkpoint['net'].keys():
+        #     model_dict[k.replace('module.features.', '')] = checkpoint['net'][k]
         self.base_net.load_state_dict(model_dict, strict=False)
         self.source_layer_add_ons.apply(_xavier_init_)
         self.extras.apply(_xavier_init_)

@@ -25,14 +25,14 @@ def create_fairnas_b_ssd_lite(num_classes, is_test=False):
     base_net = FairNasB().features
 
     source_layer_indexes = [
-        GraphPath(16, 'conv', 7),
+        GraphPath(16, 'conv', 3),
         22,
     ]
     extras = ModuleList([
-        InvertedResidual(1280, 512, stride=2, expand_ratio=0.2),
-        InvertedResidual(512, 256, stride=2, expand_ratio=0.25),
-        InvertedResidual(256, 256, stride=2, expand_ratio=0.5),
-        InvertedResidual(256, 64, stride=2, expand_ratio=0.25)
+        InvertedResidual(1280, 512, 3, stride=2, expand_ratio=0.2),
+        InvertedResidual(512, 256, 3, stride=2, expand_ratio=0.25),
+        InvertedResidual(256, 256, 3, stride=2, expand_ratio=0.5),
+        InvertedResidual(256, 64, 3, stride=2, expand_ratio=0.25)
     ])
 
     regression_headers = ModuleList([
@@ -57,7 +57,7 @@ def create_fairnas_b_ssd_lite(num_classes, is_test=False):
                extras, classification_headers, regression_headers, is_test=is_test, config=config)
 
 
-def create_fairnas_a_ssd_lite_predictor(net, candidate_size=200, nms_method=None, sigma=0.5, device=torch.device('cpu')):
+def create_fairnas_b_ssd_lite_predictor(net, candidate_size=200, nms_method=None, sigma=0.5, device=torch.device('cpu')):
     predictor = Predictor(net, config.image_size, config.image_mean,
                           config.image_std,
                           nms_method=nms_method,

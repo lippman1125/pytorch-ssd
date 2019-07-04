@@ -300,7 +300,12 @@ if __name__ == '__main__':
         net.load(args.resume)
     elif args.base_net:
         logging.info(f"Init from base net {args.base_net}")
-        net.init_from_base_net(args.base_net)
+        if args.net == 'fairnas-a-ssd-lite':
+            net.init_from_fairnas_a_base_net(args.base_net)
+        elif args.net == 'fairnas-b-ssd-lite':
+            net.init_from_fairnas_b_base_net(args.base_net)
+        else:
+            net.init_from_base_net(args.base_net)
     elif args.pretrained_ssd:
         logging.info(f"Init from pretrained ssd {args.pretrained_ssd}")
         net.init_from_pretrained_ssd(args.pretrained_ssd)

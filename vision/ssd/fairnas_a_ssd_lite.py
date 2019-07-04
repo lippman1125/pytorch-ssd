@@ -29,10 +29,10 @@ def create_fairnas_a_ssd_lite(num_classes, is_test=False):
         22,
     ]
     extras = ModuleList([
-        InvertedResidual(1280, 512, stride=2, expand_ratio=0.2),
-        InvertedResidual(512, 256, stride=2, expand_ratio=0.25),
-        InvertedResidual(256, 256, stride=2, expand_ratio=0.5),
-        InvertedResidual(256, 64, stride=2, expand_ratio=0.25)
+        InvertedResidual(1280, 512, 3, stride=2, expand_ratio=0.2),
+        InvertedResidual(512, 256, 3, stride=2, expand_ratio=0.25),
+        InvertedResidual(256, 256, 3, stride=2, expand_ratio=0.5),
+        InvertedResidual(256, 64, 3, stride=2, expand_ratio=0.25)
     ])
 
     regression_headers = ModuleList([
