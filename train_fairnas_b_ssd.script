@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=1 python3 train_ssd.py --dataset_type voc  \
+CUDA_VISIBLE_DEVICES=0 python3 train_ssd.py --dataset_type voc  \
                                             --datasets ./VOCdevkit/VOC2007/ ./VOCdevkit/VOC2012/ \
                                             --validation_dataset ./VOCdevkit/VOC2007/ \
                                             --net fairnas-b-ssd-lite \
