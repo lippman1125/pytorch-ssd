@@ -160,7 +160,9 @@ class CocoDataset:
         boxes = []
         labels = []
         for ann in anns:
-            boxes.append(np.array(ann['bbox'], dtype=np.float32))
+            # ann['bbox'][2:] += ann['bbox'][:2]
+            x1,y1,w,h = ann['bbox'][0], ann['bbox'][1], ann['bbox'][2], ann['bbox'][3]
+            boxes.append(np.array([x1,y1,x1+w,y1+h], dtype=np.float32))
             labels.append(ann['category_id'])
         boxes = np.array(boxes, dtype=np.float32)
         labels = np.array(labels, dtype=np.int64)

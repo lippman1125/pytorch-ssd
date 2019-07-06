@@ -270,6 +270,7 @@ if __name__ == '__main__':
                             shuffle=False,
                             pin_memory=False)
     logging.info("Build network.")
+    print(num_classes)
     net = create_net(num_classes)
     min_loss = -10000.0
     last_epoch = -1
