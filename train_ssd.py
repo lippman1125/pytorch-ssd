@@ -34,6 +34,7 @@ parser.add_argument("--dataset_type", default="voc", type=str,
 
 parser.add_argument('--datasets', nargs='+', help='Dataset directory path')
 parser.add_argument('--validation_dataset', help='Dataset directory path')
+parser.add_argument('--annfile', nargs='+', help='json annotation file, just for coco dataset')
 parser.add_argument('--balance_data', action='store_true',
                     help="Balance training data by down-sampling more frequent labels.")
 
@@ -227,7 +228,16 @@ if __name__ == '__main__':
             store_labels(label_file, dataset.class_names)
             logging.info(dataset)
             num_classes = len(dataset.class_names)
-
+        elif args.dataset_type == "coco":
+            from torchvision.datasets import CocoDetection
+            dataset = CocoDetection(dataset_path,
+                                    annFile=args.annfile,
+                                    transform=train_transform,
+                                    target_transform=target_transform)
+            label_file = os.path.join(args.checkpoint_folder, "coco-model-labels.txt")
+            store_labels(label_file, dataset.class_names)
+            logging.info(dataset)
+            num_classes = len(dataset.class_names)
         else:
             raise ValueError(f"Dataset tpye {args.dataset_type} is not supported.")
         datasets.append(dataset)
