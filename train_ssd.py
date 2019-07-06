@@ -35,6 +35,7 @@ parser.add_argument("--dataset_type", default="voc", type=str,
 parser.add_argument('--datasets', nargs='+', help='Dataset directory path')
 parser.add_argument('--validation_dataset', help='Dataset directory path')
 parser.add_argument('--annfile', nargs='+', help='json annotation file, just for coco dataset')
+parser.add_argument('--val_annfile', help='json annotation file, just for coco dataset')
 parser.add_argument('--balance_data', action='store_true',
                     help="Balance training data by down-sampling more frequent labels.")
 
@@ -257,6 +258,12 @@ if __name__ == '__main__':
                                         transform=test_transform, target_transform=target_transform,
                                         dataset_type="test")
         logging.info(val_dataset)
+    elif args.dataset_type == "coco":
+        from torchvision.datasets import CocoDetection
+        val_dataset = CocoDetection(args.validation_dataset,
+                                annFile=args.val_annfile,
+                                transform=test_transform,
+                                target_transform=target_transform)
     logging.info("validation dataset size: {}".format(len(val_dataset)))
 
     val_loader = DataLoader(val_dataset, args.batch_size,
