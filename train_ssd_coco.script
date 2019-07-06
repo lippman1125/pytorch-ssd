@@ -1,0 +1,14 @@
+CUDA_VISIBLE_DEVICES=1 python3 train_ssd.py --dataset_type coco  \
+                                            --datasets ./coco2014/train2014/ ./coco2014/val2014 \
+                                            --annfile ./coco2014/annotations/instances_train2014.json ./coco2014/annotations/instances_valminusminival2014.json \
+                                            --validation_dataset ./coco2014/val2014/ \
+                                            --val_annfile ./coco2014/instances_minival2014.json \
+                                            --net mb2-ssd-lite-xiaomi \
+                                            --base_net models/mv2.pth \
+                                            --scheduler multi-step \
+                                            --milestones 10,13 \
+                                            --lr 0.01 \
+                                            --t_max 200 \
+                                            --validation_epochs 2 \
+                                            --num_epochs 16 \
+                                            --num_workers 24

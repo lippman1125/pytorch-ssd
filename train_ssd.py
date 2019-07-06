@@ -214,7 +214,7 @@ if __name__ == '__main__':
 
     logging.info("Prepare training datasets.")
     datasets = []
-    for dataset_path in args.datasets:
+    for idx, dataset_path in enumerate(args.datasets):
         if args.dataset_type == 'voc':
             dataset = VOCDataset(dataset_path, transform=train_transform,
                                  target_transform=target_transform)
@@ -232,7 +232,7 @@ if __name__ == '__main__':
         elif args.dataset_type == "coco":
             from torchvision.datasets import CocoDetection
             dataset = CocoDetection(dataset_path,
-                                    annFile=args.annfile,
+                                    annFile=args.annfile[idx],
                                     transform=train_transform,
                                     target_transform=target_transform)
             label_file = os.path.join(args.checkpoint_folder, "coco-model-labels.txt")
@@ -360,10 +360,11 @@ if __name__ == '__main__':
             val_loss, val_regression_loss, val_classification_loss = test(val_loader, net, criterion, DEVICE)
             logging.info(
                 f"Epoch: {epoch}, " +
+                f"Dataset: {args.dataset_type}, " +
                 f"Validation Loss: {val_loss:.4f}, " +
                 f"Validation Regression Loss {val_regression_loss:.4f}, " +
                 f"Validation Classification Loss: {val_classification_loss:.4f}"
             )
-            model_path = os.path.join(args.checkpoint_folder, f"{args.net}-Epoch-{epoch}-Loss-{val_loss}.pth")
+            model_path = os.path.join(args.checkpoint_folder, f"{args.net}-{args.dataset_type}-Epoch-{epoch}-Loss-{val_loss}.pth")
             net.save(model_path)
             logging.info(f"Saved model {model_path}")
