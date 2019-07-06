@@ -20,6 +20,7 @@ from vision.ssd.fairnas_b_ssd_lite import create_fairnas_b_ssd_lite
 from vision.ssd.squeezenet_ssd_lite import create_squeezenet_ssd_lite
 from vision.datasets.voc_dataset import VOCDataset
 from vision.datasets.open_images import OpenImagesDataset
+from vision.datasets.coco_dataset import CocoDataset
 from vision.nn.multibox_loss import MultiboxLoss
 from vision.ssd.config import vgg_ssd_config
 from vision.ssd.config import mobilenetv1_ssd_config
@@ -230,11 +231,10 @@ if __name__ == '__main__':
             logging.info(dataset)
             num_classes = len(dataset.class_names)
         elif args.dataset_type == "coco":
-            from torchvision.datasets import CocoDetection
-            dataset = CocoDetection(dataset_path,
-                                    annFile=args.annfile[idx],
-                                    transform=train_transform,
-                                    target_transform=target_transform)
+            dataset = CocoDataset(dataset_path,
+                                  annFile=args.annfile[idx],
+                                  transform=train_transform,
+                                  target_transform=target_transform)
             label_file = os.path.join(args.checkpoint_folder, "coco-model-labels.txt")
             store_labels(label_file, dataset.class_names)
             logging.info(dataset)
@@ -259,11 +259,10 @@ if __name__ == '__main__':
                                         dataset_type="test")
         logging.info(val_dataset)
     elif args.dataset_type == "coco":
-        from torchvision.datasets import CocoDetection
-        val_dataset = CocoDetection(args.validation_dataset,
-                                annFile=args.val_annfile,
-                                transform=test_transform,
-                                target_transform=target_transform)
+        val_dataset = CocoDataset(args.validation_dataset,
+                                  annFile=args.val_annfile,
+                                  transform=test_transform,
+                                  target_transform=target_transform)
     logging.info("validation dataset size: {}".format(len(val_dataset)))
 
     val_loader = DataLoader(val_dataset, args.batch_size,
