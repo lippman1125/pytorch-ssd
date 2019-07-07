@@ -8,6 +8,7 @@ from vision.ssd.fairnas_b_ssd_lite import create_fairnas_b_ssd_lite, create_fair
 from vision.ssd.squeezenet_ssd_lite import create_squeezenet_ssd_lite, create_squeezenet_ssd_lite_predictor
 from vision.datasets.voc_dataset import VOCDataset
 from vision.datasets.open_images import OpenImagesDataset
+from vision.datasets.coco_dataset import CocoDataset
 from vision.utils import box_utils, measurements
 from vision.utils.misc import str2bool, Timer
 import argparse
@@ -26,6 +27,7 @@ parser.add_argument("--trained_model", type=str)
 parser.add_argument("--dataset_type", default="voc", type=str,
                     help='Specify dataset type. Currently support voc and open_images.')
 parser.add_argument("--dataset", type=str, help="The root directory of the VOC dataset or Open Images dataset.")
+parser.add_argument('--annfile', type=str, help='json annotation file, just for coco dataset')
 parser.add_argument("--label_file", type=str, help="The label file path.")
 parser.add_argument("--use_cuda", type=str2bool, default=True)
 parser.add_argument("--use_2007_metric", type=str2bool, default=True)
@@ -132,6 +134,8 @@ if __name__ == '__main__':
         dataset = VOCDataset(args.dataset, is_test=True)
     elif args.dataset_type == 'open_images':
         dataset = OpenImagesDataset(args.dataset, dataset_type="test")
+    elif args.dataset_type == 'coco':
+        dataset = CocoDataset(args.dataset, args.annfile)
 
     true_case_stat, all_gb_boxes, all_difficult_cases = group_annotation_by_class(dataset)
     if args.net == 'vgg16-ssd':
@@ -198,7 +202,8 @@ if __name__ == '__main__':
         ], dim=1))
     results = torch.cat(results)
     for class_index, class_name in enumerate(class_names):
-        if class_index == 0: continue  # ignore background
+        if class_index == 0 or class_name == '_':
+            continue  # ignore background
         prediction_path = eval_path / f"det_test_{class_name}.txt"
         with open(prediction_path, "w") as f:
             sub = results[results[:, 1] == class_index, :]
@@ -206,13 +211,14 @@ if __name__ == '__main__':
                 prob_box = sub[i, 2:].numpy()
                 image_id = dataset.ids[int(sub[i, 0])]
                 print(
-                    image_id + " " + " ".join([str(v) for v in prob_box]),
+                    str(image_id) + " " + " ".join([str(v) for v in prob_box]),
                     file=f
                 )
     aps = []
     print("\n\nAverage Precision Per-class:")
     for class_index, class_name in enumerate(class_names):
-        if class_index == 0:
+        # coco class has _ name
+        if class_index == 0 or class_name == '_':
             continue
         prediction_path = eval_path / f"det_test_{class_name}.txt"
         ap = compute_average_precision_per_class(

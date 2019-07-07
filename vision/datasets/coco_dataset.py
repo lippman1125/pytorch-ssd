@@ -9,7 +9,7 @@ def _count_visible_keypoints(anno):
 
 
 def _has_only_empty_bbox(anno):
-    return all(any(o <= 1 for o in obj["bbox"][2:]) for obj in anno)
+    return all(any(o <= 8 for o in obj["bbox"][2:]) for obj in anno)
 
 
 def has_valid_annotation(anno):
@@ -63,7 +63,7 @@ class CocoDataset:
         'boat',
         'traffic light',
         'fire hydrant',
-        ' ',
+        '_',
         'stop sign',
         'parking meter',
         'bench',
@@ -77,11 +77,11 @@ class CocoDataset:
         'bear',
         'zebra',
         'giraffe',
-        ' ',
+        '_',
         'backpack',
         'umbrella',
-        ' ',
-        ' ',
+        '_',
+        '_',
         'handbag',
         'tie',
         'suitcase',
@@ -96,7 +96,7 @@ class CocoDataset:
         'surfboard',
         'tennis racket',
         'bottle',
-        ' ',
+        '_',
         'wine glass',
         'cup',
         'fork',
@@ -117,12 +117,12 @@ class CocoDataset:
         'couch',
         'potted plant',
         'bed',
-        ' ',
+        '_',
         'dining table',
-        ' ',
-        ' ',
+        '_',
+        '_',
         'toilet',
-        ' ',
+        '_',
         'tv',
         'laptop',
         'mouse',
@@ -134,7 +134,7 @@ class CocoDataset:
         'toaster',
         'sink',
         'refrigerator',
-        ' ',
+        '_',
         'book',
         'clock',
         'vase',
@@ -162,7 +162,10 @@ class CocoDataset:
         for ann in anns:
             # ann['bbox'][2:] += ann['bbox'][:2]
             x1,y1,w,h = ann['bbox'][0], ann['bbox'][1], ann['bbox'][2], ann['bbox'][3]
-            boxes.append(np.array([x1,y1,x1+w,y1+h], dtype=np.float32))
+            # limit box size
+            if w<=8 or h <=8:
+                continue
+            boxes.append(np.array([x1,y1,x1+w-1,y1+h-1], dtype=np.float32))
             labels.append(ann['category_id'])
         boxes = np.array(boxes, dtype=np.float32)
         labels = np.array(labels, dtype=np.int64)
@@ -187,3 +190,38 @@ class CocoDataset:
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         return image
+
+    def get_image(self, index):
+        coco = self.coco
+        img_id = self.ids[index]
+        path = coco.loadImgs(img_id)[0]['file_name']
+        image = self._read_image(os.path.join(self.root, path))
+        if self.transform:
+            image, _ = self.transform(image)
+        return image
+
+    # for eval
+    def get_annotation(self, index):
+        img_id = self.ids[index]
+        return str(img_id), self._get_annotation(img_id)
+
+    def _get_annotation(self, img_id):
+        coco = self.coco
+        ann_ids = coco.getAnnIds(imgIds=img_id)
+        anns = coco.loadAnns(ann_ids)
+
+        boxes = []
+        labels = []
+        for ann in anns:
+            # ann['bbox'][2:] += ann['bbox'][:2]
+            x1,y1,w,h = ann['bbox'][0], ann['bbox'][1], ann['bbox'][2], ann['bbox'][3]
+            # limit box size
+            if w<=1 or h <=1:
+                continue
+            boxes.append(np.array([x1,y1,x1+w-1,y1+h-1], dtype=np.float32))
+            labels.append(ann['category_id'])
+        boxes = np.array(boxes, dtype=np.float32)
+        labels = np.array(labels, dtype=np.int64)
+        is_difficult = np.zeros(np.shape(labels)[0], dtype=np.uint8)
+
+        return (boxes, labels, is_difficult)

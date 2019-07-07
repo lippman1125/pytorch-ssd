@@ -1,10 +1,10 @@
-CUDA_VISIBLE_DEVICES=1 python3 train_ssd.py --dataset_type coco  \
+CUDA_VISIBLE_DEVICES=0 python3 train_ssd.py --dataset_type coco  \
                                             --datasets ./coco2014/train2014/ ./coco2014/val2014 \
                                             --annfile ./coco2014/annotations/instances_train2014.json ./coco2014/annotations/instances_valminusminival2014.json \
                                             --validation_dataset ./coco2014/val2014/ \
                                             --val_annfile ./coco2014/annotations/instances_minival2014.json \
-                                            --net mb2-ssd-lite-xiaomi \
-                                            --base_net models/mv2.pth \
+                                            --net fairnas-b-ssd-lite \
+                                            --base_net models/FairNasB.pth.tar \
                                             --scheduler multi-step \
                                             --milestones 20,26 \
                                             --lr 0.01 \

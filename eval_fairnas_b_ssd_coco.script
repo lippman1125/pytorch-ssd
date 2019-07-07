@@ -1,0 +1,8 @@
+CUDA_VISIBLE_DEVICES=0 python3 eval_ssd.py  --dataset_type coco \
+                                            --dataset ./coco2014/val2014/ \
+                                            --annfile ./coco2014/annotations/instances_minival2014.json \
+                                            --net fairnas-b-ssd-lite \
+                                            --trained_model models/fairnas-b-ssd-lite-coco-best.pth \
+                                            --label_file models/coco-model-labels.txt \
+                                            --eval_dir eval_fairnas_b_coco_results
+                                               
