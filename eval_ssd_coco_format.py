@@ -31,6 +31,7 @@ parser.add_argument("--use_cuda", type=str2bool, default=True)
 parser.add_argument("--eval_dir", default="eval_results", type=str, help="The directory to store evaluation results.")
 parser.add_argument('--mb2_width_mult', default=1.0, type=float,
                     help='Width Multiplifier for MobilenetV2')
+parser.add_argument("--nms_method", type=str, default="hard")
 args = parser.parse_args()
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() and args.use_cuda else "cpu")
 
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     eval_path = pathlib.Path(args.eval_dir)
     eval_path.mkdir(exist_ok=True)
     timer = Timer()
-    class_names = [name.strip() for name in open(args.label_file).readlines()]
+    class_names = ["name"]*91
     dataset = CocoDataset(args.dataset, args.annfile)
 
     if args.net == 'vgg16-ssd':
@@ -100,16 +101,16 @@ if __name__ == '__main__':
         timer.start("Predict")
         boxes, labels, probs = predictor.predict(image)
         print("Prediction: {:4f} seconds.".format(timer.end("Predict")))
-        boxes = boxes.to_numpy()
-        labels = labels.to_numpy()
-        probs = probs.to_numpy()
+        boxes = boxes.numpy()
+        labels = labels.numpy()
+        probs = probs.numpy()
         for k in range(np.shape(labels)[0]):
             result = {}
             result["image_id"] = int(image_id)
             result["category_id"] = int(labels[k])
             x1,y1,x2,y2 = boxes[k][0], boxes[k][1], boxes[k][2], boxes[k][3]
-            result["bbox"] = np.array([int(x1), int(y1), int(x2 - x1), int(y2 - y1)], dtype=np.int32)
-            result["score"] = round(probs[k], 2)
+            result["bbox"] = [int(x1), int(y1), int(x2 - x1), int(y2 - y1)]
+            result["score"] = float(round(probs[k], 2))
 
             results.append(result)
 

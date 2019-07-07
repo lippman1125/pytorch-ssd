@@ -1,0 +1,6 @@
+CUDA_VISIBLE_DEVICES=0 python3 eval_ssd_coco_format.py --dataset ./coco2014/val2014/ \
+                                                       --annfile ./coco2014/annotations/instances_minival2014.json \
+                                                       --net mb2-ssd-lite-xiaomi \
+                                                       --trained_model models/mb2-ssd-lite-xiaomi-coco-best.pth \
+                                                       --eval_dir eval_coco_results
+                                               
