@@ -225,3 +225,136 @@ class CocoDataset:
         is_difficult = np.zeros(np.shape(labels)[0], dtype=np.uint8)
 
         return (boxes, labels, is_difficult)
+
+
+class CocoDatasetTest:
+    """`MS Coco Detection <http://mscoco.org/dataset/#detections-challenge2016>`_ Dataset.
+
+    Args:
+        root (string): Root directory where images are downloaded to.
+        annFile (string): Path to json annotation file.
+        transform (callable, optional): A function/transform that  takes in an PIL image
+            and returns a transformed version. E.g, ``transforms.ToTensor``
+        target_transform (callable, optional): A function/transform that takes in the
+            target and transforms it.
+        transforms (callable, optional): A function/transform that takes input sample and its target as entry
+            and returns a transformed version.
+    """
+
+    def __init__(self, root, annFile, transform=None, target_transform=None, transforms=None):
+        from pycocotools.coco import COCO
+        self.coco = COCO(annFile)
+        self.ids = list(sorted(self.coco.imgs.keys()))
+        self.root = root
+        self.transform = transform
+        self.target_transform = target_transform
+        self.class_names = [
+            '__background__',
+            'person',
+            'bicycle',
+            'car',
+            'motorcycle',
+            'airplane',
+            'bus',
+            'train',
+            'truck',
+            'boat',
+            'traffic light',
+            'fire hydrant',
+            '_',
+            'stop sign',
+            'parking meter',
+            'bench',
+            'bird',
+            'cat',
+            'dog',
+            'horse',
+            'sheep',
+            'cow',
+            'elephant',
+            'bear',
+            'zebra',
+            'giraffe',
+            '_',
+            'backpack',
+            'umbrella',
+            '_',
+            '_',
+            'handbag',
+            'tie',
+            'suitcase',
+            'frisbee',
+            'skis',
+            'snowboard',
+            'sports ball',
+            'kite',
+            'baseball bat',
+            'baseball glove',
+            'skateboard',
+            'surfboard',
+            'tennis racket',
+            'bottle',
+            '_',
+            'wine glass',
+            'cup',
+            'fork',
+            'knife',
+            'spoon',
+            'bowl',
+            'banana',
+            'apple',
+            'sandwich',
+            'orange',
+            'broccoli',
+            'carrot',
+            'hot dog',
+            'pizza',
+            'donut',
+            'cake',
+            'chair',
+            'couch',
+            'potted plant',
+            'bed',
+            '_',
+            'dining table',
+            '_',
+            '_',
+            'toilet',
+            '_',
+            'tv',
+            'laptop',
+            'mouse',
+            'remote',
+            'keyboard',
+            'cell phone',
+            'microwave',
+            'oven',
+            'toaster',
+            'sink',
+            'refrigerator',
+            '_',
+            'book',
+            'clock',
+            'vase',
+            'scissors',
+            'teddy bear',
+            'hair drier',
+            'toothbrush'
+        ]
+
+    def __len__(self):
+        return len(self.ids)
+
+    def _read_image(self, image_path):
+        image = cv2.imread(image_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        return image
+
+    def get_image(self, index):
+        coco = self.coco
+        img_id = self.ids[index]
+        path = coco.loadImgs(img_id)[0]['file_name']
+        image = self._read_image(os.path.join(self.root, path))
+        if self.transform:
+            image, _ = self.transform(image)
+        return image

@@ -8,7 +8,7 @@ from vision.ssd.fairnas_b_ssd_lite import create_fairnas_b_ssd_lite, create_fair
 from vision.ssd.squeezenet_ssd_lite import create_squeezenet_ssd_lite, create_squeezenet_ssd_lite_predictor
 from vision.datasets.voc_dataset import VOCDataset
 from vision.datasets.open_images import OpenImagesDataset
-from vision.datasets.coco_dataset import CocoDataset
+from vision.datasets.coco_dataset import CocoDatasetTest
 from vision.utils import box_utils, measurements
 from vision.utils.misc import str2bool, Timer
 import argparse
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     eval_path.mkdir(exist_ok=True)
     timer = Timer()
     class_names = ["name"]*91
-    dataset = CocoDataset(args.dataset, args.annfile)
+    dataset = CocoDatasetTest(args.dataset, args.annfile)
 
     if args.net == 'vgg16-ssd':
         net = create_vgg_ssd(len(class_names), is_test=True)
