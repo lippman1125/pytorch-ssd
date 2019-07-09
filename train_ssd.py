@@ -72,7 +72,9 @@ parser.add_argument('--base_net',
 parser.add_argument('--pretrained_ssd', help='Pre-trained base model')
 parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from')
-
+# Optimizer
+parser.add_argument('--optimizer', default="SGD", type=str,
+                    help="optimizer, support SGD/RMSprop")
 # Scheduler
 parser.add_argument('--scheduler', default="multi-step", type=str,
                     help="Scheduler for SGD. It can one of multi-step and cosine")
@@ -335,8 +337,23 @@ if __name__ == '__main__':
 
     criterion = MultiboxLoss(config.priors, iou_threshold=0.5, neg_pos_ratio=3,
                              center_variance=0.1, size_variance=0.2, device=DEVICE)
-    optimizer = torch.optim.SGD(params, lr=args.lr, momentum=args.momentum,
-                                weight_decay=args.weight_decay)
+    if args.optimizer == "SGD":
+        print("using SGD as optimizer")
+        optimizer = torch.optim.SGD(params, lr=args.lr, momentum=args.momentum,
+                                    weight_decay=args.weight_decay)
+    elif args.optimizer == "RMSprop":
+        print("using RMSprop as optimizer")
+        optimizer = torch.optim.RMSprop(params,
+                                        lr=args.lr,
+                                        alpha=0.9,
+                                        eps=1.0,
+                                        weight_decay=args.weight_decay,
+                                        momentum=args.momentum,
+                                    )
+    else:
+        print("unsupport optimizer")
+        exit(0)
+
     logging.info(f"Learning rate: {args.lr}, Base net learning rate: {base_net_lr}, "
                  + f"Extra Layers learning rate: {extra_layers_lr}.")
 
