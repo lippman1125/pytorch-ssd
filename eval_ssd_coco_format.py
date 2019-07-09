@@ -40,8 +40,9 @@ if __name__ == '__main__':
     eval_path = pathlib.Path(args.eval_dir)
     eval_path.mkdir(exist_ok=True)
     timer = Timer()
-    class_names = ["name"]*91
+    # class_names = ["name"]*91
     dataset = CocoDatasetTest(args.dataset, args.annfile)
+    class_names = dataset.class_names
 
     if args.net == 'vgg16-ssd':
         net = create_vgg_ssd(len(class_names), is_test=True)
@@ -105,14 +106,15 @@ if __name__ == '__main__':
         labels = labels.numpy()
         probs = probs.numpy()
         for k in range(np.shape(labels)[0]):
-            result = {}
-            result["image_id"] = int(image_id)
-            result["category_id"] = int(labels[k])
-            x1,y1,x2,y2 = boxes[k][0], boxes[k][1], boxes[k][2], boxes[k][3]
-            result["bbox"] = [int(x1), int(y1), int(x2 - x1), int(y2 - y1)]
-            result["score"] = float(round(probs[k], 2))
+            if class_names[labels[k]] != '_':
+                result = {}
+                result["image_id"] = int(image_id)
+                result["category_id"] = int(labels[k])
+                x1,y1,x2,y2 = boxes[k][0], boxes[k][1], boxes[k][2], boxes[k][3]
+                result["bbox"] = [int(x1), int(y1), int(x2 - x1), int(y2 - y1)]
+                result["score"] = float(round(probs[k], 2))
 
-            results.append(result)
+                results.append(result)
 
     # convert format from list to json
     results_json = json.dumps(results)

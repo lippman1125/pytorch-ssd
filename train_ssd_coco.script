@@ -6,9 +6,10 @@ CUDA_VISIBLE_DEVICES=1 python3 train_ssd.py --dataset_type coco  \
                                             --net mb2-ssd-lite-xiaomi \
                                             --base_net models/mv2.pth \
                                             --scheduler multi-step \
-                                            --milestones 20,26 \
-                                            --lr 0.01 \
+                                            --milestones 60,80 \
+                                            --lr 0.02 \
+                                            --batch_size 128 \
                                             --t_max 200 \
                                             --validation_epochs 2 \
-                                            --num_epochs 32 \
-                                            --num_workers 24
+                                            --num_epochs 90 \
+                                            --num_workers 32
