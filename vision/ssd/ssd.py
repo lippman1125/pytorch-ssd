@@ -188,10 +188,16 @@ class SSD(nn.Module):
         # for k in checkpoint['net'].keys():
         #     model_dict[k.replace('module.features.', '')] = checkpoint['net'][k]
         self.base_net.load_state_dict(model_dict, strict=False)
-        self.source_layer_add_ons.apply(_xavier_init_)
-        self.extras.apply(_xavier_init_)
-        self.classification_headers.apply(_xavier_init_)
-        self.regression_headers.apply(_xavier_init_)
+        # self.source_layer_add_ons.apply(_xavier_init_)
+        # self.extras.apply(_xavier_init_)
+        # self.classification_headers.apply(_xavier_init_)
+        # self.regression_headers.apply(_xavier_init_)
+
+        self.source_layer_add_ons.apply(_normal_init_)
+        self.extras.apply(_normal_init_)
+        self.classification_headers.apply(_normal_init_)
+        self.regression_headers.apply(_normal_init_)
+
 
     def init_from_pretrained_ssd(self, model):
         state_dict = torch.load(model, map_location=lambda storage, loc: storage)
@@ -239,3 +245,7 @@ class MatchPrior(object):
 def _xavier_init_(m: nn.Module):
     if isinstance(m, nn.Conv2d):
         nn.init.xavier_uniform_(m.weight)
+
+def _normal_init_(m: nn.Module):
+    if isinstance(m, nn.Conv2d):
+        nn.init.normal_(m.weight, mean=0.0, std=0.03)

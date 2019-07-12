@@ -108,8 +108,8 @@ parser.add_argument('--checkpoint_folder', default='models/',
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 args = parser.parse_args()
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available() and args.use_cuda else "cpu")
-# DEVICE = torch.device("cuda" if torch.cuda.is_available() and args.use_cuda else "cpu")
+# DEVICE = torch.device("cuda:0" if torch.cuda.is_available() and args.use_cuda else "cpu")
+DEVICE = torch.device("cuda" if torch.cuda.is_available() and args.use_cuda else "cpu")
 print(DEVICE)
 print(torch.cuda.is_available())
 if args.use_cuda and torch.cuda.is_available():
@@ -124,9 +124,13 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
     running_classification_loss = 0.0
     for i, data in enumerate(loader):
         images, boxes, labels = data
-        images = images.to(device)
-        boxes = boxes.to(device)
-        labels = labels.to(device)
+        # images = images.to(device)
+        # boxes = boxes.to(device)
+        # labels = labels.to(device)
+        images = images.cuda(async=True)
+        boxes = boxes.cuda(async=True)
+        labels = labels.cuda(async=True)
+
 
         optimizer.zero_grad()
         confidence, locations = net(images)
@@ -253,7 +257,7 @@ if __name__ == '__main__':
     train_loader = DataLoader(train_dataset, args.batch_size,
                               num_workers=args.num_workers,
                               shuffle=True,
-                              pin_memory=False)
+                              pin_memory=True)
     logging.info("Prepare Validation datasets.")
     if args.dataset_type == "voc":
         val_dataset = VOCDataset(args.validation_dataset, transform=test_transform,
@@ -273,7 +277,7 @@ if __name__ == '__main__':
     val_loader = DataLoader(val_dataset, args.batch_size,
                             num_workers=args.num_workers,
                             shuffle=False,
-                            pin_memory=False)
+                            pin_memory=True)
     logging.info("Build network.")
     print(num_classes)
     net = create_net(num_classes)
@@ -333,6 +337,7 @@ if __name__ == '__main__':
         net.init_from_pretrained_ssd(args.pretrained_ssd)
     logging.info(f'Took {timer.end("Load Model"):.2f} seconds to load the model.')
     
+    net = torch.nn.DataParallel(net)
     net.to(DEVICE)
 
     criterion = MultiboxLoss(config.priors, iou_threshold=0.5, neg_pos_ratio=3,
@@ -386,5 +391,6 @@ if __name__ == '__main__':
                 f"Validation Classification Loss: {val_classification_loss:.4f}"
             )
             model_path = os.path.join(args.checkpoint_folder, f"{args.net}-{args.dataset_type}-Epoch-{epoch}-Loss-{val_loss}.pth")
-            net.save(model_path)
+            # net.save(model_path)
+            torch.save(net.module.state_dict(), model_path)
             logging.info(f"Saved model {model_path}")
