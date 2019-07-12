@@ -9,7 +9,7 @@ def _count_visible_keypoints(anno):
 
 
 def _has_only_empty_bbox(anno):
-    return all(any(o <= 8 for o in obj["bbox"][2:]) for obj in anno)
+    return all(any(o <= 1 for o in obj["bbox"][2:]) for obj in anno)
 
 
 def has_valid_annotation(anno):
@@ -156,23 +156,29 @@ class CocoDataset:
         img_id = self.ids[index]
         ann_ids = coco.getAnnIds(imgIds=img_id)
         anns = coco.loadAnns(ann_ids)
-        
+        image = coco.loadImgs(img_id)
+        image_width = image[0]["width"]
+        image_height = image[0]["height"]
+        path = image[0]["file_name"]
+
         boxes = []
         labels = []
         for ann in anns:
             # ann['bbox'][2:] += ann['bbox'][:2]
             x1,y1,w,h = ann['bbox'][0], ann['bbox'][1], ann['bbox'][2], ann['bbox'][3]
             # limit box size
-            if w<=8 or h <=8:
+            if w<2 or h<2:
                 continue
-            boxes.append(np.array([x1,y1,x1+w-1,y1+h-1], dtype=np.float32))
+            if x1+w > image_width or y1+h > image_height:
+                continue
+            boxes.append(np.array([x1,y1,x1+w,y1+h], dtype=np.float32))
             labels.append(ann['category_id'])
         boxes = np.array(boxes, dtype=np.float32)
         labels = np.array(labels, dtype=np.int64)
         # print(np.shape(boxes))
         # print(np.shape(labels))
 
-        path = coco.loadImgs(img_id)[0]['file_name']
+        # path = image[0]['file_name']
 
         image = self._read_image(os.path.join(self.root, path))
         if self.transform:

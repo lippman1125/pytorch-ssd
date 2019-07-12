@@ -46,7 +46,7 @@ class TrainAugmentation_COCO:
             ConvertFromInts(),
             PhotometricDistort(),
             # Expand(self.mean),
-            # RandomSampleCrop(),
+            RandomSampleCrop(),
             RandomMirror(),
             ToPercentCoords(),
             Resize(self.size),
