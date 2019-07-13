@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 import types
 from numpy import random
-
+import accimage
 
 def intersect(box_a, box_b):
     max_xy = np.minimum(box_a[:, 2:], box_b[2:])
@@ -104,6 +104,18 @@ class ToPercentCoords(object):
         return image, boxes, labels
 
 
+class ToPercentCoordsAC(object):
+    def __call__(self, image, boxes=None, labels=None):
+        height = image.height
+        width = image.width
+        boxes[:, 0] /= width
+        boxes[:, 2] /= width
+        boxes[:, 1] /= height
+        boxes[:, 3] /= height
+
+        return image, boxes, labels
+
+
 class Resize(object):
     def __init__(self, size=300):
         self.size = size
@@ -112,6 +124,24 @@ class Resize(object):
         image = cv2.resize(image, (self.size,
                                  self.size))
         return image, boxes, labels
+
+class ResizeAC(object):
+    def __init__(self, size=300):
+        self.size = size
+
+    def __call__(self, image, boxes=None, labels=None):
+        image = image.resize(size=(self.size, self.size))
+        return image, boxes, labels
+
+class ToNumpyAC(object):
+    def __init__(self, size=300):
+        self.size = size
+
+    def __call__(self, image, boxes=None, labels=None):
+        image_np = np.empty([3, self.size, self.size], dtype=np.uint8)
+        image.copyto(image_np)
+        image_np = np.transpose(image_np, (1, 2, 0))
+        return image_np, boxes, labels
 
 
 class RandomSaturation(object):
@@ -355,6 +385,15 @@ class RandomMirror(object):
             boxes[:, 0::2] = width - boxes[:, 2::-2]
         return image, boxes, classes
 
+
+class RandomMirrorAC(object):
+    def __call__(self, image, boxes, classes):
+        width= image.width
+        if random.randint(2):
+            image = image.transpose(0)
+            boxes = boxes.copy()
+            boxes[:, 0::2] = width - boxes[:, 2::-2]
+        return image, boxes, classes
 
 class SwapChannels(object):
     """Transforms a tensorized image by swapping the channels in the order
