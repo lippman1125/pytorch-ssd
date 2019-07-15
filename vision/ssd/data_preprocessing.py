@@ -44,9 +44,9 @@ class TrainAugmentation_COCO:
         self.size = size
         self.augment = Compose([
             ConvertFromInts(),
-            # PhotometricDistort(),
+            PhotometricDistort(),
             # Expand(self.mean),
-            # RandomSampleCrop(),
+            RandomSampleCrop(),
             RandomMirror(),
             ToPercentCoords(),
             Resize(self.size),
