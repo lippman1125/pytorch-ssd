@@ -50,6 +50,14 @@ class CocoDataset:
             if has_valid_annotation(anno):
                 ids.append(img_id)
         self.ids = ids
+        self.json_category_id_to_contiguous_id = {
+            v: i + 1 for i, v in enumerate(self.coco.getCatIds())
+        }
+        self.contiguous_category_id_to_json_id = {
+            v: k for k, v in self.json_category_id_to_contiguous_id.items()
+        }
+        print(self.json_category_id_to_contiguous_id)
+        print(self.contiguous_category_id_to_json_id)
         self.class_names = [
         '__background__',
         'person',
@@ -63,7 +71,6 @@ class CocoDataset:
         'boat',
         'traffic light',
         'fire hydrant',
-        '_',
         'stop sign',
         'parking meter',
         'bench',
@@ -77,11 +84,8 @@ class CocoDataset:
         'bear',
         'zebra',
         'giraffe',
-        '_',
         'backpack',
         'umbrella',
-        '_',
-        '_',
         'handbag',
         'tie',
         'suitcase',
@@ -96,7 +100,6 @@ class CocoDataset:
         'surfboard',
         'tennis racket',
         'bottle',
-        '_',
         'wine glass',
         'cup',
         'fork',
@@ -117,12 +120,8 @@ class CocoDataset:
         'couch',
         'potted plant',
         'bed',
-        '_',
         'dining table',
-        '_',
-        '_',
         'toilet',
-        '_',
         'tv',
         'laptop',
         'mouse',
@@ -134,7 +133,6 @@ class CocoDataset:
         'toaster',
         'sink',
         'refrigerator',
-        '_',
         'book',
         'clock',
         'vase',
@@ -172,7 +170,7 @@ class CocoDataset:
             if x1+w > image_width or y1+h > image_height:
                 continue
             boxes.append(np.array([x1,y1,x1+w,y1+h], dtype=np.float32))
-            labels.append(ann['category_id'])
+            labels.append(self.json_category_id_to_contiguous_id[ann['category_id']])
         boxes = np.array(boxes, dtype=np.float32)
         labels = np.array(labels, dtype=np.int64)
         # print(np.shape(boxes))
@@ -254,6 +252,14 @@ class CocoDatasetTest:
         self.root = root
         self.transform = transform
         self.target_transform = target_transform
+        self.json_category_id_to_contiguous_id = {
+            v: i + 1 for i, v in enumerate(self.coco.getCatIds())
+        }
+        self.contiguous_category_id_to_json_id = {
+            v: k for k, v in self.json_category_id_to_contiguous_id.items()
+        }
+        print(self.json_category_id_to_contiguous_id)
+        print(self.contiguous_category_id_to_json_id)
         self.class_names = [
             '__background__',
             'person',
@@ -267,7 +273,6 @@ class CocoDatasetTest:
             'boat',
             'traffic light',
             'fire hydrant',
-            '_',
             'stop sign',
             'parking meter',
             'bench',
@@ -281,11 +286,8 @@ class CocoDatasetTest:
             'bear',
             'zebra',
             'giraffe',
-            '_',
             'backpack',
             'umbrella',
-            '_',
-            '_',
             'handbag',
             'tie',
             'suitcase',
@@ -300,7 +302,6 @@ class CocoDatasetTest:
             'surfboard',
             'tennis racket',
             'bottle',
-            '_',
             'wine glass',
             'cup',
             'fork',
@@ -321,12 +322,8 @@ class CocoDatasetTest:
             'couch',
             'potted plant',
             'bed',
-            '_',
             'dining table',
-            '_',
-            '_',
             'toilet',
-            '_',
             'tv',
             'laptop',
             'mouse',
@@ -338,7 +335,6 @@ class CocoDatasetTest:
             'toaster',
             'sink',
             'refrigerator',
-            '_',
             'book',
             'clock',
             'vase',
@@ -364,3 +360,7 @@ class CocoDatasetTest:
         if self.transform:
             image, _ = self.transform(image)
         return image
+
+if __name__ == '__main__':
+    import sys
+    coco = CocoDataset(sys.argv[1], sys.argv[2])
