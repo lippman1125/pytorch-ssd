@@ -106,14 +106,12 @@ if __name__ == '__main__':
         labels = labels.numpy()
         probs = probs.numpy()
         for k in range(np.shape(labels)[0]):
-            if class_names[labels[k]] != '_':
                 result = {}
                 result["image_id"] = int(image_id)
-                result["category_id"] = int(labels[k])
+                result["category_id"] = int(dataset.contiguous_category_id_to_json_id[labels[k]])
                 x1,y1,x2,y2 = boxes[k][0], boxes[k][1], boxes[k][2], boxes[k][3]
                 result["bbox"] = [int(x1), int(y1), int(x2 - x1), int(y2 - y1)]
                 result["score"] = float(round(probs[k], 2))
-
                 results.append(result)
 
     # convert format from list to json
