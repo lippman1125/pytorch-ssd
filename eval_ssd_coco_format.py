@@ -105,6 +105,11 @@ if __name__ == '__main__':
         boxes = boxes.numpy()
         labels = labels.numpy()
         probs = probs.numpy()
+        keep_id = np.argsort(probs)[::-1]
+        keep_id = keep_id[:100]
+        boxes = boxes[keep_id, :]
+        labels = labels[keep_id]
+        probs = probs[keep_id]
         for k in range(np.shape(labels)[0]):
                 result = {}
                 result["image_id"] = int(image_id)
