@@ -7,6 +7,7 @@ import itertools
 import torch
 from torch.utils.data import DataLoader, ConcatDataset
 from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
+from warmup_scheduler import GradualWarmupScheduler
 
 from vision.utils.misc import str2bool, Timer, freeze_net_layers, store_labels
 from vision.ssd.ssd import MatchPrior
@@ -78,6 +79,9 @@ parser.add_argument('--optimizer', default="SGD", type=str,
 # Scheduler
 parser.add_argument('--scheduler', default="multi-step", type=str,
                     help="Scheduler for SGD. It can one of multi-step and cosine")
+# Warmup
+parser.add_argument('--warmup', default="0", type=int,
+                    help="config warm up training scheduler.")
 
 # Params for Multi-step Scheduler
 parser.add_argument('--milestones', default="80,100", type=str,
@@ -143,11 +147,12 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
         running_regression_loss += regression_loss.item()
         running_classification_loss += classification_loss.item()
         if i and i % debug_steps == 0:
+            lr = optimizer.param_groups['lr']
             avg_loss = running_loss / debug_steps
             avg_reg_loss = running_regression_loss / debug_steps
             avg_clf_loss = running_classification_loss / debug_steps
             logging.info(
-                f"Epoch: {epoch}, Step: {i}, " +
+                f"Epoch: {epoch}, Step: {i}, LR: {lr}" +
                 f"Average Loss: {avg_loss:.4f}, " +
                 f"Average Regression Loss {avg_reg_loss:.4f}, " +
                 f"Average Classification Loss: {avg_clf_loss:.4f}"
@@ -377,9 +382,16 @@ if __name__ == '__main__':
         parser.print_help(sys.stderr)
         sys.exit(1)
 
+    if args.warmup:
+        scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=2, total_epoch=args.warmup, after_scheduler=scheduler)
+
+
     logging.info(f"Start training from epoch {last_epoch + 1}.")
     for epoch in range(last_epoch + 1, args.num_epochs):
-        scheduler.step()
+        if args.warmup:
+            scheduler_warmup.step(epoch=epoch)
+        else:
+            scheduler.step()
         train(train_loader, net, criterion, optimizer,
               device=DEVICE, debug_steps=args.debug_steps, epoch=epoch)
         
