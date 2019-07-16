@@ -273,7 +273,7 @@ if __name__ == '__main__':
                                   annFile=args.val_annfile,
                                   transform=test_transform,
                                   target_transform=target_transform,
-                                  is_test=True)
+                                  is_test=False)
     logging.info("validation dataset size: {}".format(len(val_dataset)))
 
     val_loader = DataLoader(val_dataset, args.batch_size,

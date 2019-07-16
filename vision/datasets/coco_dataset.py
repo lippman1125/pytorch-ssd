@@ -248,14 +248,14 @@ class CocoDatasetOpt:
                    'refrigerator', 'book', 'clock', 'vase', 'scissors',
                    'teddy bear', 'hair drier', 'toothbrush')
 
-    def __init__(self, data_dir, ann_file, transform=None, target_transform=None, is_test=False):
+    def __init__(self, data_dir, annFile, transform=None, target_transform=None, is_test=False):
         from pycocotools.coco import COCO
-        self.coco = COCO(ann_file)
+        self.coco = COCO(annFile)
         self.data_dir = data_dir
         self.transform = transform
         self.target_transform = target_transform
 
-        if is_test:
+        if not is_test:
             # when training, images without annotations are removed.
             self.ids = list(self.coco.imgToAnns.keys())
         else:
