@@ -22,11 +22,13 @@ from vision.ssd.squeezenet_ssd_lite import create_squeezenet_ssd_lite
 from vision.datasets.voc_dataset import VOCDataset
 from vision.datasets.open_images import OpenImagesDataset
 from vision.datasets.coco_dataset import CocoDataset, CocoDatasetOpt
+from vision.datasets.coco_pipeline import COCOPipeline, get_train_dali_loader
 from vision.nn.multibox_loss import MultiboxLoss
 from vision.ssd.config import vgg_ssd_config
 from vision.ssd.config import mobilenetv1_ssd_config
 from vision.ssd.config import squeezenet_ssd_config
 from vision.ssd.data_preprocessing import TrainAugmentation, TrainAugmentation_COCO, TestTransform
+from vision.utils.dali_utils import dboxes320_mv2_coco, Encoder
 
 parser = argparse.ArgumentParser(
     description='Single Shot MultiBox Detector Training With Pytorch')
@@ -48,7 +50,8 @@ parser.add_argument('--freeze_base_net', action='store_true',
                     help="Freeze base net layers.")
 parser.add_argument('--freeze_net', action='store_true',
                     help="Freeze all the layers except the prediction head.")
-
+parser.add_argument('--dali', action='store_false',
+                    help="Use NVIDIA DALI dataloader.")
 parser.add_argument('--mb2_width_mult', default=1.0, type=float,
                     help='Width Multiplifier for MobilenetV2')
 
@@ -121,20 +124,27 @@ if args.use_cuda and torch.cuda.is_available():
     logging.info("Use Cuda.")
 
 
-def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
+def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1, is_dali=False):
     net.train(True)
     running_loss = 0.0
     running_regression_loss = 0.0
     running_classification_loss = 0.0
     for i, data in enumerate(loader):
-        images, boxes, labels = data
-        # images = images.to(device)
-        # boxes = boxes.to(device)
-        # labels = labels.to(device)
-        images = images.cuda(async=True)
-        boxes = boxes.cuda(async=True)
-        labels = labels.cuda(async=True)
+        if not is_dali:
+            images, boxes, labels = data
+            # images = images.to(device)
+            # boxes = boxes.to(device)
+            # labels = labels.to(device)
+            images = images.cuda(async=True)
+            boxes = boxes.cuda(async=True)
+            labels = labels.cuda(async=True)
+        else:
+            images = data[0]["images"]
+            boxes = data[0]["boxes"]
+            labels = data[0]["labels"]
 
+            labels = labels.type(torch.cuda.LongTensor)
+            boxes = boxes.transpose(1, 2).contiguous().cuda()
 
         optimizer.zero_grad()
         confidence, locations = net(images)
@@ -245,25 +255,43 @@ if __name__ == '__main__':
             logging.info(dataset)
             num_classes = len(dataset.class_names)
         elif args.dataset_type == "coco":
-            dataset = CocoDatasetOpt(dataset_path,
-                                  annFile=args.annfile[idx],
-                                  transform=train_transform,
-                                  target_transform=target_transform,
-                                  is_test=False)
-            label_file = os.path.join(args.checkpoint_folder, "coco-model-labels.txt")
-            store_labels(label_file, dataset.class_names)
-            logging.info(dataset)
-            num_classes = len(dataset.class_names)
+            if args.dali:
+                dataset = get_train_dali_loader(
+                                      dboxes320_mv2_coco(),
+                                      dataset_path,
+                                      args.annfile[idx],
+                                      args.batch_size,
+                                      0, # rank
+                                      args.num_workers,
+                                      1, # ngpus
+                                      0  # local_seed
+                                      )
+                num_classes = 81
+            else:
+                dataset = CocoDataset(dataset_path,
+                                      annFile=args.annfile[idx],
+                                      transform=train_transform,
+                                      target_transform=target_transform,
+                                      is_test=False)
+                label_file = os.path.join(args.checkpoint_folder, "coco-model-labels.txt")
+                store_labels(label_file, dataset.class_names)
+                logging.info(dataset)
+                num_classes = len(dataset.class_names)
         else:
             raise ValueError(f"Dataset tpye {args.dataset_type} is not supported.")
         datasets.append(dataset)
-    logging.info(f"Stored labels into file {label_file}.")
-    train_dataset = ConcatDataset(datasets)
-    logging.info("Train dataset size: {}".format(len(train_dataset)))
-    train_loader = DataLoader(train_dataset, args.batch_size,
-                              num_workers=args.num_workers,
-                              shuffle=True,
-                              pin_memory=True)
+
+    if not args.dali:
+        logging.info(f"Stored labels into file {label_file}.")
+        train_dataset = ConcatDataset(datasets)
+        logging.info("Train dataset size: {}".format(len(train_dataset)))
+        train_loader = DataLoader(train_dataset, args.batch_size,
+                                  num_workers=args.num_workers,
+                                  shuffle=True,
+                                  pin_memory=True)
+    else:
+        train_loader = dataset
+
     logging.info("Prepare Validation datasets.")
     if args.dataset_type == "voc":
         val_dataset = VOCDataset(args.validation_dataset, transform=test_transform,
