@@ -50,7 +50,7 @@ parser.add_argument('--freeze_base_net', action='store_true',
                     help="Freeze base net layers.")
 parser.add_argument('--freeze_net', action='store_true',
                     help="Freeze all the layers except the prediction head.")
-parser.add_argument('--dali', action='store_false',
+parser.add_argument('--dali', action='store_true',
                     help="Use NVIDIA DALI dataloader.")
 parser.add_argument('--mb2_width_mult', default=1.0, type=float,
                     help='Width Multiplifier for MobilenetV2')

@@ -1,6 +1,6 @@
 CUDA_VISIBLE_DEVICES=0 python3 train_ssd.py --dataset_type coco  \
-                                            --datasets ./coco2014/train2014/ ./coco2014/val2014 \
-                                            --annfile ./coco2014/annotations/instances_train2014.json ./coco2014/annotations/instances_valminusminival2014.json \
+                                            --datasets ./coco2014/train2014/ \
+                                            --annfile ./coco2014/annotations/instances_train2014.json \
                                             --validation_dataset ./coco2014/val2014/ \
                                             --val_annfile ./coco2014/annotations/instances_minival2014.json \
                                             --net mb2-ssd-lite-xiaomi \
@@ -13,4 +13,5 @@ CUDA_VISIBLE_DEVICES=0 python3 train_ssd.py --dataset_type coco  \
                                             --t_max 200 \
                                             --validation_epochs 10 \
                                             --num_epochs 150 \
-                                            --num_workers 32
+                                            --num_workers 4 \
+                                            --dali
