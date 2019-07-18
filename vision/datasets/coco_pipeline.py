@@ -103,7 +103,7 @@ class COCOPipeline(Pipeline):
         images = self.normalize(images)
         bboxes, labels = self.box_encoder(bboxes, labels)
 
-        return (images, bboxes.gpu(), labels.gpu())
+        return (images, bboxes, labels)
 
 
 def get_train_dali_loader(default_boxes, root, annFile, batch_size,

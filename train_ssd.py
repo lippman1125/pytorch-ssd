@@ -151,7 +151,6 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1, 
                                                config.size_variance)
             boxes = boxes.contiguous().cuda()
 
-
         optimizer.zero_grad()
         confidence, locations = net(images)
         regression_loss, classification_loss = criterion(confidence, locations, labels, boxes)  # TODO CHANGE BOXES
