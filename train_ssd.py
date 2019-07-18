@@ -7,7 +7,7 @@ import itertools
 import torch
 from torch.utils.data import DataLoader, ConcatDataset
 from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
-from warmup_scheduler import GradualWarmupScheduler
+from vision.utils.warmup_scheduler import GradualWarmupScheduler
 
 from vision.utils.misc import str2bool, Timer, freeze_net_layers, store_labels
 from vision.ssd.ssd import MatchPrior
