@@ -144,7 +144,7 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1, 
             labels = data[0]["labels"]
 
             labels = labels.type(torch.cuda.LongTensor)
-            boxes = boxes.transpose(1, 2).contiguous().cuda()
+            boxes = boxes.contiguous().cuda()
 
         optimizer.zero_grad()
         confidence, locations = net(images)
@@ -271,8 +271,8 @@ if __name__ == '__main__':
                 dataset = CocoDataset(dataset_path,
                                       annFile=args.annfile[idx],
                                       transform=train_transform,
-                                      target_transform=target_transform,
-                                      is_test=False)
+                                      target_transform=target_transform
+                                      )
                 label_file = os.path.join(args.checkpoint_folder, "coco-model-labels.txt")
                 store_labels(label_file, dataset.class_names)
                 logging.info(dataset)
@@ -421,7 +421,7 @@ if __name__ == '__main__':
         else:
             scheduler.step()
         train(train_loader, net, criterion, optimizer,
-              device=DEVICE, debug_steps=args.debug_steps, epoch=epoch)
+              device=DEVICE, debug_steps=args.debug_steps, epoch=epoch, is_dali=args.dali)
         
         if epoch % args.validation_epochs == 0 or epoch == args.num_epochs - 1:
             val_loss, val_regression_loss, val_classification_loss = test(val_loader, net, criterion, DEVICE)

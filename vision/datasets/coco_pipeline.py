@@ -32,7 +32,7 @@ class COCOPipeline(Pipeline):
             random_shuffle=False,
             shuffle_after_epoch=True)
 
-        self.decode = ops.ImageDecoder(device="cpu", output_type=types.RGB)
+        self.decode = ops.nvJPEGDecoder(device="mixed", output_type=types.RGB)
 
         # Augumentation techniques
         self.crop = ops.RandomBBoxCrop(
@@ -43,18 +43,18 @@ class COCOPipeline(Pipeline):
             ltrb=True,
             allow_no_crop=True,
             num_attempts=1)
-        self.slice = ops.Slice(device="cpu")
+        self.slice = ops.Slice(device="gpu")
         self.twist = ops.ColorTwist(device="gpu")
         self.resize = ops.Resize(
-            device="cpu",
-            resize_x=300,
-            resize_y=300,
+            device="gpu",
+            resize_x=320,
+            resize_y=320,
             min_filter=types.DALIInterpType.INTERP_TRIANGULAR)
 
 
         self.normalize = ops.CropMirrorNormalize(
             device="gpu",
-            crop=(300, 300),
+            crop=(320, 320),
             mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
             std=[0.229 * 255, 0.224 * 255, 0.225 * 255],
             mirror=0,
@@ -67,7 +67,7 @@ class COCOPipeline(Pipeline):
         self.rng2 = ops.Uniform(range=[0.875, 1.125])
         self.rng3 = ops.Uniform(range=[-0.5, 0.5])
 
-        self.flip = ops.Flip(device="cpu")
+        self.flip = ops.Flip(device="gpu")
         self.bbflip = ops.BbFlip(device="cpu", ltrb=True)
         self.flip_coin = ops.CoinFlip(probability=0.5)
 
