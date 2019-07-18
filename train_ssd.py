@@ -416,7 +416,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     if args.warmup:
-        scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=2, total_epoch=args.warmup, after_scheduler=scheduler)
+        scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=10, total_epoch=args.warmup, after_scheduler=scheduler)
 
 
     logging.info(f"Start training from epoch {last_epoch + 1}.")
@@ -441,3 +441,7 @@ if __name__ == '__main__':
             # net.save(model_path)
             torch.save(net.module.state_dict(), model_path)
             logging.info(f"Saved model {model_path}")
+
+        # we need to restart coco pipeline
+        if args.dali:
+            train_loader.reset()
