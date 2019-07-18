@@ -29,6 +29,7 @@ from vision.ssd.config import mobilenetv1_ssd_config
 from vision.ssd.config import squeezenet_ssd_config
 from vision.ssd.data_preprocessing import TrainAugmentation, TrainAugmentation_COCO, TestTransform
 from vision.utils.dali_utils import dboxes320_mv2_coco, Encoder
+from vision.utils.box_utils import convert_boxes_to_locations
 
 parser = argparse.ArgumentParser(
     description='Single Shot MultiBox Detector Training With Pytorch')
@@ -144,7 +145,12 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1, 
             labels = data[0]["labels"]
 
             labels = labels.type(torch.cuda.LongTensor)
+            boxes = convert_boxes_to_locations(boxes,
+                                               dboxes320_mv2_coco()(order="xywh"),
+                                               config.center_variance,
+                                               config.size_variance)
             boxes = boxes.contiguous().cuda()
+
 
         optimizer.zero_grad()
         confidence, locations = net(images)
