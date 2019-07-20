@@ -38,11 +38,11 @@ class COCOPipeline(Pipeline):
         self.crop = ops.RandomBBoxCrop(
             device="cpu",
             aspect_ratio=[0.5, 2.0],
-            thresholds=[0, 0.1, 0.3, 0.5, 0.7, 0.9],
+            thresholds=[0.1, 0.3, 0.5, 0.7, 0.9],
             scaling=[0.3, 1.0],
             ltrb=True,
             allow_no_crop=True,
-            num_attempts=1)
+            num_attempts=50)
         self.slice = ops.Slice(device="gpu")
         self.twist = ops.ColorTwist(device="gpu")
         self.resize = ops.Resize(
