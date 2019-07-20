@@ -55,8 +55,8 @@ class COCOPipeline(Pipeline):
         self.normalize = ops.CropMirrorNormalize(
             device="gpu",
             crop=(320, 320),
-            mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
-            std=[0.229 * 255, 0.224 * 255, 0.225 * 255],
+            mean=[127.0, 127.0, 127.0],
+            std=[128.0, 128.0, 128.0],
             mirror=0,
             output_dtype=types.FLOAT,
             output_layout=types.NCHW,
