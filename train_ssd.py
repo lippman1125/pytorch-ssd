@@ -143,7 +143,6 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1, 
             images = data[0]["images"]
             boxes = data[0]["boxes"]
             labels = data[0]["labels"]
-
             labels = labels.type(torch.cuda.LongTensor)
             boxes = convert_boxes_to_locations(boxes,
                                                dboxes320_mv2_coco()(order="xywh"),
