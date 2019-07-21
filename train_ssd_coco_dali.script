@@ -9,7 +9,7 @@ CUDA_VISIBLE_DEVICES=1 python3 train_ssd.py --dataset_type coco  \
                                             --scheduler multi-step \
                                             --milestones 90,120 \
                                             --lr 0.02 \
-                                            --batch_size 1 \
+                                            --batch_size 128 \
                                             --t_max 200 \
                                             --validation_epochs 10 \
                                             --num_epochs 150 \
