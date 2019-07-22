@@ -27,9 +27,9 @@ def SeperableConv2dDropout(in_channels, out_channels, kernel_size=1, stride=1, p
     return Sequential(
         Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size,
                groups=in_channels, stride=stride, padding=padding),
-        Dropout2d(p=0.2),
         BatchNorm2d(in_channels),
         ReLU(),
+        Dropout2d(p=0.2),
         Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1),
     )
 
