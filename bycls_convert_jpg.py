@@ -6,30 +6,23 @@ import PIL
 import collections
 import numpy as np
 import sys
-
+import glob
 
 input_dir = sys.argv[1]
-labels_pkl = sys.argv[2]
-output_dir = sys.argv[3]
+output_dir = sys.argv[2]
 
 if not os.path.exists(input_dir):
     print("invalid input_dir : {}".format(input_dir))
-    exit(0)
-
-if not os.path.exists(labels_pkl):
-    print("invalid labels_pkl : {}".format(labels_pkl))
     exit(0)
 
 if not os.path.exists(output_dir):
     print("makedirs={}".format(output_dir))
     os.makedirs(output_dir)
 
-print("loading labels from pkl... " + labels_pkl)
-with open(labels_pkl, "rb") as f:
-    samples = pickle.load(f)
+samples = glob.glob(os.path.join(input_dir, "*.*"))
 
 for s in samples:
-    path, lable = s
+    path = s
     from PIL import Image
     from PIL import ImageFile
 
@@ -40,15 +33,11 @@ for s in samples:
     basename = os.path.basename(path)
     filename, suffix = os.path.splitext(basename)
 
-    new_dir = os.path.join(output_dir, dirname)
-    if not os.path.exists(new_dir):
-        print("make new sub dir={}".format(new_dir))
-        os.makedirs(new_dir)
-    new_file = os.path.join(new_dir, filename + ".jpg")
+    new_file = os.path.join(output_dir, filename + ".jpg")
     if not os.path.exists(new_file):
         print("old={} new={}".format(path, new_file))
         try:
-            img = Image.open(os.path.join(input_dir, path)).convert("RGB")
+            img = Image.open(os.path.join(path)).convert("RGB")
             img.save(new_file)
         except(OSError, NameError):
             print("OSError : {}".format(path)) 
