@@ -419,7 +419,7 @@ if __name__ == '__main__':
 
 
     logging.info(f"Start training from epoch {last_epoch + 1}.")
-    for epoch in range(last_epoch + 1, args.num_epochs):
+    for epoch in range(last_epoch + 1, args.t_max):
         if args.warmup:
             scheduler_warmup.step(epoch=epoch)
         else:
@@ -444,3 +444,30 @@ if __name__ == '__main__':
         # we need to restart coco pipeline
         if args.dali:
             train_loader.reset()
+
+    for idx in range(args.num_epochs//args.t_max - 1):
+        for epoch in range(last_epoch + 1, args.t_max):
+            scheduler.step()
+            train(train_loader, net, criterion, optimizer,
+                  device=DEVICE, debug_steps=args.debug_steps, epoch=epoch, is_dali=args.dali)
+
+            if epoch % args.validation_epochs == 0 or epoch == args.num_epochs - 1:
+                val_loss, val_regression_loss, val_classification_loss = test(val_loader, net, criterion, DEVICE)
+                logging.info(
+                    f"Epoch: {epoch}, " +
+                    f"Dataset: {args.dataset_type}, " +
+                    f"Validation Loss: {val_loss:.4f}, " +
+                    f"Validation Regression Loss {val_regression_loss:.4f}, " +
+                    f"Validation Classification Loss: {val_classification_loss:.4f}"
+                )
+                model_path = os.path.join(args.checkpoint_folder,
+                                          f"{args.net}-{args.dataset_type}-Epoch-{epoch}-Loss-{val_loss}.pth")
+                # net.save(model_path)
+                torch.save(net.module.state_dict(), model_path)
+                logging.info(f"Saved model {model_path}")
+
+            # we need to restart coco pipeline
+            if args.dali:
+                train_loader.reset()
+        last_epoch = -1
+        scheduler = CosineAnnealingLR(optimizer, args.t_max, last_epoch=last_epoch)
