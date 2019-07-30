@@ -419,7 +419,7 @@ if __name__ == '__main__':
 
 
     logging.info(f"Start training from epoch {last_epoch + 1}.")
-    for epoch in range(last_epoch + 1, args.t_max):
+    for epoch in range(last_epoch + 1, int(args.t_max)):
         if args.warmup:
             scheduler_warmup.step(epoch=epoch)
         else:
@@ -445,8 +445,10 @@ if __name__ == '__main__':
         if args.dali:
             train_loader.reset()
 
-    for idx in range(args.num_epochs//args.t_max - 1):
-        for epoch in range(last_epoch + 1, args.t_max):
+    for idx in range(args.num_epochs//int(args.t_max) - 1):
+        last_epoch = -1
+        scheduler = CosineAnnealingLR(optimizer, args.t_max, last_epoch=last_epoch)
+        for epoch in range(last_epoch + 1, int(args.t_max)):
             scheduler.step()
             train(train_loader, net, criterion, optimizer,
                   device=DEVICE, debug_steps=args.debug_steps, epoch=epoch, is_dali=args.dali)
@@ -469,5 +471,3 @@ if __name__ == '__main__':
             # we need to restart coco pipeline
             if args.dali:
                 train_loader.reset()
-        last_epoch = -1
-        scheduler = CosineAnnealingLR(optimizer, args.t_max, last_epoch=last_epoch)
