@@ -198,7 +198,18 @@ def hard_negative_mining(loss, labels, neg_pos_ratio):
     num_neg = num_pos * neg_pos_ratio
 
     loss[pos_mask] = -math.inf
+    #              0     1     2     3     4     5
+    # loss    = [0.30, 0.31, 0.32, 0.10, 0.50, 0.20]
+    # ===loss sort descending===
+    # loss    = [0.50, 0.32, 0.31, 0.30, 0.20, 0.10]
+    # indexes = [ 4,    2,    1,    0,    5,    3]
     _, indexes = loss.sort(dim=1, descending=True)
+    #            0     1     2     3     4     5
+    # indexes = [4,    2,    1,    0,    5,    3]
+    # ===indexes sort===
+    # orders  = [3,    2,    1,    5,    0,    4]
+    # indexs  = [0,    1,    2,    3,    4,    5]
+    # if num_neg == 3, we need to select three indexes from beginning
     _, orders = indexes.sort(dim=1)
     neg_mask = orders < num_neg
     return pos_mask | neg_mask
