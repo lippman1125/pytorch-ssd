@@ -96,7 +96,8 @@ parser.add_argument('--milestones', default="80,100", type=str,
 # Params for Cosine Annealing
 parser.add_argument('--t_max', default=120, type=float,
                     help='T_max value for Cosine Annealing Scheduler.')
-
+parser.add_argument('--t_multi', default=1.0, type=float,
+                    help='T_multi value for Cosine Annealing Lr Decay Scheduler.')
 # Train params
 parser.add_argument('--batch_size', default=32, type=int,
                     help='Batch size for training')
@@ -452,6 +453,14 @@ if __name__ == '__main__':
 
     for idx in range(args.num_epochs//int(args.t_max) - 1):
         last_epoch = -1
+        print("NO.{} Restart, Base LR = {}".format(idx+1, args.lr*args.t_multi))
+        optimizer = torch.optim.RMSprop(params,
+                                        lr=args.lr * args.t_multi,
+                                        alpha=0.9,
+                                        eps=1.0,
+                                        weight_decay=args.weight_decay,
+                                        momentum=args.momentum,
+                                    )
         scheduler = CosineAnnealingLR(optimizer, args.t_max, last_epoch=last_epoch)
         for epoch in range(last_epoch + 1, int(args.t_max)):
             scheduler.step()
