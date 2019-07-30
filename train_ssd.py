@@ -24,6 +24,7 @@ from vision.datasets.open_images import OpenImagesDataset
 from vision.datasets.coco_dataset import CocoDataset, CocoDatasetOpt
 from vision.datasets.coco_pipeline import COCOPipeline, get_train_dali_loader
 from vision.nn.multibox_loss import MultiboxLoss
+from vision.nn.focal_loss import FocalLoss
 from vision.ssd.config import vgg_ssd_config
 from vision.ssd.config import mobilenetv1_ssd_config
 from vision.ssd.config import squeezenet_ssd_config
@@ -69,7 +70,8 @@ parser.add_argument('--base_net_lr', default=None, type=float,
                     help='initial learning rate for base net.')
 parser.add_argument('--extra_layers_lr', default=None, type=float,
                     help='initial learning rate for the layers not in base net and prediction heads.')
-
+parser.add_argument('--focalloss', action='store_true',
+                    help="Use focal loss.")
 
 # Params for loading pretrained basenet or checkpoints.
 parser.add_argument('--base_net',
@@ -379,8 +381,11 @@ if __name__ == '__main__':
     net = torch.nn.DataParallel(net)
     net.to(DEVICE)
 
-    criterion = MultiboxLoss(config.priors, iou_threshold=0.5, neg_pos_ratio=3,
-                             center_variance=0.1, size_variance=0.2, device=DEVICE)
+    if args.focalloss:
+        criterion = FocalLoss(num_classes)
+    else:
+        criterion = MultiboxLoss(config.priors, iou_threshold=0.5, neg_pos_ratio=3,
+                                 center_variance=0.1, size_variance=0.2, device=DEVICE)
     if args.optimizer == "SGD":
         print("using SGD as optimizer")
         optimizer = torch.optim.SGD(params, lr=args.lr, momentum=args.momentum,
@@ -408,7 +413,7 @@ if __name__ == '__main__':
                                                      gamma=0.1, last_epoch=last_epoch)
     elif args.scheduler == 'cosine':
         logging.info("Uses CosineAnnealingLR scheduler.")
-        scheduler = CosineAnnealingLR(optimizer, args.t_max, last_epoch=last_epoch)
+        scheduler = CosineAnnealingLR(optimizer, args.t_max, eta_min=1e-8, last_epoch=last_epoch)
     else:
         logging.fatal(f"Unsupported Scheduler: {args.scheduler}.")
         parser.print_help(sys.stderr)
