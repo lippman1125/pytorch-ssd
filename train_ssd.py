@@ -8,6 +8,7 @@ import torch
 from torch.utils.data import DataLoader, ConcatDataset
 from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
 from vision.utils.warmup_scheduler import GradualWarmupScheduler
+from vision.utils.CosineAnnealingWithRestartsLR import CosineAnnealingWithRestartsLR
 
 from vision.utils.misc import str2bool, Timer, freeze_net_layers, store_labels
 from vision.ssd.ssd import MatchPrior
@@ -44,7 +45,6 @@ parser.add_argument('--annfile', nargs='+', help='json annotation file, just for
 parser.add_argument('--val_annfile', help='json annotation file, just for coco dataset')
 parser.add_argument('--balance_data', action='store_true',
                     help="Balance training data by down-sampling more frequent labels.")
-
 
 parser.add_argument('--net', default="vgg16-ssd",
                     help="The network architecture, it can be mb1-ssd, mb1-lite-ssd, mb2-ssd-lite or vgg16-ssd.")
@@ -114,7 +114,6 @@ parser.add_argument('--use_cuda', default=True, type=str2bool,
 
 parser.add_argument('--checkpoint_folder', default='models/',
                     help='Directory for saving checkpoint models')
-
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -255,8 +254,8 @@ if __name__ == '__main__':
             num_classes = len(dataset.class_names)
         elif args.dataset_type == 'open_images':
             dataset = OpenImagesDataset(dataset_path,
-                 transform=train_transform, target_transform=target_transform,
-                 dataset_type="train", balance_data=args.balance_data)
+                                        transform=train_transform, target_transform=target_transform,
+                                        dataset_type="train", balance_data=args.balance_data)
             label_file = os.path.join(args.checkpoint_folder, "open-images-model-labels.txt")
             store_labels(label_file, dataset.class_names)
             logging.info(dataset)
@@ -264,15 +263,15 @@ if __name__ == '__main__':
         elif args.dataset_type == "coco":
             if args.dali:
                 dataset = get_train_dali_loader(
-                                      dboxes320_mv2_coco(),
-                                      dataset_path,
-                                      args.annfile[idx],
-                                      args.batch_size,
-                                      0, # rank
-                                      args.num_workers,
-                                      1, # ngpus
-                                      0  # local_seed
-                                      )
+                    dboxes320_mv2_coco(),
+                    dataset_path,
+                    args.annfile[idx],
+                    args.batch_size,
+                    0,  # rank
+                    args.num_workers,
+                    1,  # ngpus
+                    0  # local_seed
+                )
                 num_classes = 81
             else:
                 dataset = CocoDataset(dataset_path,
@@ -310,10 +309,10 @@ if __name__ == '__main__':
         logging.info(val_dataset)
     elif args.dataset_type == "coco":
         val_dataset = CocoDatasetOpt(args.validation_dataset,
-                                  annFile=args.val_annfile,
-                                  transform=test_transform,
-                                  target_transform=target_transform,
-                                  is_test=False)
+                                     annFile=args.val_annfile,
+                                     transform=test_transform,
+                                     target_transform=target_transform,
+                                     is_test=False)
     logging.info("validation dataset size: {}".format(len(val_dataset)))
 
     val_loader = DataLoader(val_dataset, args.batch_size,
@@ -378,7 +377,7 @@ if __name__ == '__main__':
         logging.info(f"Init from pretrained ssd {args.pretrained_ssd}")
         net.init_from_pretrained_ssd(args.pretrained_ssd)
     logging.info(f'Took {timer.end("Load Model"):.2f} seconds to load the model.')
-    
+
     net = torch.nn.DataParallel(net)
     net.to(DEVICE)
 
@@ -399,7 +398,7 @@ if __name__ == '__main__':
                                         eps=1.0,
                                         weight_decay=args.weight_decay,
                                         momentum=args.momentum,
-                                    )
+                                        )
     else:
         print("unsupport optimizer")
         exit(0)
@@ -411,28 +410,32 @@ if __name__ == '__main__':
         logging.info("Uses MultiStepLR scheduler.")
         milestones = [int(v.strip()) for v in args.milestones.split(",")]
         scheduler = MultiStepLR(optimizer, milestones=milestones,
-                                                     gamma=0.1, last_epoch=last_epoch)
+                                gamma=0.1, last_epoch=last_epoch)
     elif args.scheduler == 'cosine':
         logging.info("Uses CosineAnnealingLR scheduler.")
         scheduler = CosineAnnealingLR(optimizer, args.t_max, eta_min=1e-8, last_epoch=last_epoch)
+    elif args.scheduler == 'cosine_restart':
+        logging.info("Uses CosineAnnealingRestartLR scheduler.")
+        scheduler = CosineAnnealingWithRestartsLR(optimizer, args.t_max, eta_min=1e-8, last_epoch=last_epoch,
+                                                  t_mul=args.t_multi)
     else:
         logging.fatal(f"Unsupported Scheduler: {args.scheduler}.")
         parser.print_help(sys.stderr)
         sys.exit(1)
 
     if args.warmup:
-        scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=10, total_epoch=args.warmup, after_scheduler=scheduler)
-
+        scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=10, total_epoch=args.warmup,
+                                                  after_scheduler=scheduler)
 
     logging.info(f"Start training from epoch {last_epoch + 1}.")
-    for epoch in range(last_epoch + 1, int(args.t_max)):
+    for epoch in range(last_epoch + 1, args.num_epochs):
         if args.warmup:
             scheduler_warmup.step(epoch=epoch)
         else:
             scheduler.step()
         train(train_loader, net, criterion, optimizer,
               device=DEVICE, debug_steps=args.debug_steps, epoch=epoch, is_dali=args.dali)
-        
+
         if epoch % args.validation_epochs == 0 or epoch == args.num_epochs - 1:
             val_loss, val_regression_loss, val_classification_loss = test(val_loader, net, criterion, DEVICE)
             logging.info(
@@ -442,7 +445,8 @@ if __name__ == '__main__':
                 f"Validation Regression Loss {val_regression_loss:.4f}, " +
                 f"Validation Classification Loss: {val_classification_loss:.4f}"
             )
-            model_path = os.path.join(args.checkpoint_folder, f"{args.net}-{args.dataset_type}-Epoch-{epoch}-Loss-{val_loss}.pth")
+            model_path = os.path.join(args.checkpoint_folder,
+                                      f"{args.net}-{args.dataset_type}-Epoch-{epoch}-Loss-{val_loss}.pth")
             # net.save(model_path)
             torch.save(net.module.state_dict(), model_path)
             logging.info(f"Saved model {model_path}")
@@ -450,38 +454,3 @@ if __name__ == '__main__':
         # we need to restart coco pipeline
         if args.dali:
             train_loader.reset()
-
-    for idx in range(args.num_epochs//int(args.t_max) - 1):
-        last_epoch = -1
-        print("NO.{} Restart, Base LR = {}".format(idx+1, args.lr*args.t_multi))
-        optimizer = torch.optim.RMSprop(params,
-                                        lr=args.lr * args.t_multi,
-                                        alpha=0.9,
-                                        eps=1.0,
-                                        weight_decay=args.weight_decay,
-                                        momentum=args.momentum,
-                                    )
-        scheduler = CosineAnnealingLR(optimizer, args.t_max, last_epoch=last_epoch)
-        for epoch in range(last_epoch + 1, int(args.t_max)):
-            scheduler.step()
-            train(train_loader, net, criterion, optimizer,
-                  device=DEVICE, debug_steps=args.debug_steps, epoch=epoch, is_dali=args.dali)
-
-            if epoch % args.validation_epochs == 0 or epoch == args.num_epochs - 1:
-                val_loss, val_regression_loss, val_classification_loss = test(val_loader, net, criterion, DEVICE)
-                logging.info(
-                    f"Epoch: {epoch}, " +
-                    f"Dataset: {args.dataset_type}, " +
-                    f"Validation Loss: {val_loss:.4f}, " +
-                    f"Validation Regression Loss {val_regression_loss:.4f}, " +
-                    f"Validation Classification Loss: {val_classification_loss:.4f}"
-                )
-                model_path = os.path.join(args.checkpoint_folder,
-                                          f"{args.net}-{args.dataset_type}-Epoch-{epoch}-Loss-{val_loss}.pth")
-                # net.save(model_path)
-                torch.save(net.module.state_dict(), model_path)
-                logging.info(f"Saved model {model_path}")
-
-            # we need to restart coco pipeline
-            if args.dali:
-                train_loader.reset()
