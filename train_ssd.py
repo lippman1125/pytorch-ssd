@@ -416,7 +416,7 @@ if __name__ == '__main__':
         scheduler = CosineAnnealingLR(optimizer, args.t_max, eta_min=1e-8, last_epoch=last_epoch)
     elif args.scheduler == 'cosine_restart':
         logging.info("Uses CosineAnnealingRestartLR scheduler.")
-        scheduler = CosineAnnealingWithRestartsLR(optimizer, args.t_max, eta_min=1e-8, last_epoch=last_epoch,
+        scheduler = CosineAnnealingWithRestartsLR(optimizer, args.t_max, lr_min=1e-8, last_epoch=last_epoch,
                                                   t_mul=args.t_multi)
     else:
         logging.fatal(f"Unsupported Scheduler: {args.scheduler}.")

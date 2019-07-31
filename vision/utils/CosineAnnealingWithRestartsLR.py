@@ -19,12 +19,17 @@ class CosineAnnealingWithRestartsLR(_LRScheduler):
 
     def get_lr(self):
         Tcur = self.last_epoch - self.last_restart
-        if Tcur >= self.next_restart:
-            self.next_restart *= self.T_mult
-            self.last_restart = self.last_epoch
+        # print("Tcur={}, last_epoch={}, last_restart={}".format(Tcur, self.last_epoch, self.last_restart))
+        # if Tcur >= self.next_restart:
+        #     self.next_restart *= self.T_mult
+        #     self.last_restart = self.last_epoch
         result = [(self.eta_min +
                  (base_lr - self.eta_min) * (1 + math.cos(math.pi * Tcur / self.next_restart)) / 2)
                 for base_lr in self.base_lrs]
+        if Tcur >= self.next_restart:
+            self.next_restart *= self.T_mult
+            self.last_restart = self.last_epoch
+
         return result
 
 
