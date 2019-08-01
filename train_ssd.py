@@ -439,7 +439,7 @@ if __name__ == '__main__':
         train(train_loader, net, criterion, optimizer,
               device=DEVICE, debug_steps=args.debug_steps, epoch=epoch, is_dali=args.dali)
 
-        if epoch % args.validation_epochs == 0 or epoch == args.num_epochs - 1:
+        if epoch % args.validation_epochs == 0 or epoch % args.t_max == args.t_max - 1 or epoch == args.num_epochs - 1:
             val_loss, val_regression_loss, val_classification_loss = test(val_loader, net, criterion, DEVICE)
             logging.info(
                 f"Epoch: {epoch}, " +
