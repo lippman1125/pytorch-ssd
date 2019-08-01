@@ -243,6 +243,9 @@ if __name__ == '__main__':
 
     test_transform = TestTransform(config.image_size, config.image_mean, config.image_std)
 
+    if not os.path.exists(args.checkpoint_folder):
+        os.makedirs(args.checkpoint_folder)
+
     logging.info("Prepare training datasets.")
     datasets = []
     for idx, dataset_path in enumerate(args.datasets):
