@@ -98,6 +98,8 @@ parser.add_argument('--t_max', default=120, type=float,
                     help='T_max value for Cosine Annealing Scheduler.')
 parser.add_argument('--t_multi', default=1.0, type=float,
                     help='T_multi value for Cosine Annealing Lr Decay Scheduler.')
+parser.add_argument('--t_decay', default=1.0, type=float,
+                    help='T_decay value for Cosine Annealing Lr Decay Scheduler.')
 # Train params
 parser.add_argument('--batch_size', default=32, type=int,
                     help='Batch size for training')
@@ -420,7 +422,8 @@ if __name__ == '__main__':
     elif args.scheduler == 'cosine_restart':
         logging.info("Uses CosineAnnealingRestartLR scheduler.")
         scheduler = CosineAnnealingWithRestartsLR(optimizer, args.t_max, lr_min=1e-8, last_epoch=last_epoch,
-                                                  t_mul=args.t_multi)
+                                                  t_mul=args.t_multi,
+                                                  t_decay=args.t_decay)
     else:
         logging.fatal(f"Unsupported Scheduler: {args.scheduler}.")
         parser.print_help(sys.stderr)
