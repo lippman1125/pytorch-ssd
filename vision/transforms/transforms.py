@@ -264,7 +264,7 @@ class RandomSampleCrop(object):
             # sample a patch s.t. MIN jaccard w/ obj in .1,.3,.4,.7,.9
             (0.1, None),
             (0.3, None),
-            (0.5, None)
+            (0.5, None),
             (0.7, None),
             (0.9, None),
             # randomly sample a patch
