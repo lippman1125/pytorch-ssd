@@ -25,16 +25,16 @@ class CosineAnnealingWithRestartsLR(_LRScheduler):
         # if Tcur >= self.next_restart:
         #     self.next_restart *= self.T_mult
         #     self.last_restart = self.last_epoch
-        result = [(self.eta_min +
-                 (base_lr - self.eta_min) * (1 + math.cos(math.pi * Tcur / self.next_restart)) / 2)
-                for base_lr in self.base_lrs]
         scale = pow(self.decay, self.gamma)
+        result = [(self.eta_min +
+                 scale * (base_lr - self.eta_min) * (1 + math.cos(math.pi * Tcur / self.next_restart)) / 2)
+                for base_lr in self.base_lrs]
         if Tcur >= self.next_restart:
             self.next_restart *= self.T_mult
             self.last_restart = self.last_epoch
             self.gamma += 1
 
-        return result*scale
+        return result
 
 
 if __name__ == '__main__':
