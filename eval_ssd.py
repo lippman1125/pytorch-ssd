@@ -8,7 +8,7 @@ from vision.ssd.fairnas_b_ssd_lite import create_fairnas_b_ssd_lite, create_fair
 from vision.ssd.squeezenet_ssd_lite import create_squeezenet_ssd_lite, create_squeezenet_ssd_lite_predictor
 from vision.datasets.voc_dataset import VOCDataset
 from vision.datasets.open_images import OpenImagesDataset
-from vision.datasets.coco_dataset import CocoDataset
+from vision.datasets.coco_dataset import CocoDatasetTest
 from vision.utils import box_utils, measurements
 from vision.utils.misc import str2bool, Timer
 import argparse
@@ -73,7 +73,6 @@ def group_annotation_by_class(dataset):
             all_gt_boxes[class_index][image_id] = torch.tensor(all_gt_boxes[class_index][image_id])
     return true_case_stat, all_gt_boxes, all_difficult_cases
 
-
 def compute_average_precision_per_class(num_true_cases, gt_boxes, difficult_cases,
                                         prediction_file, iou_threshold, use_2007_metric):
     with open(prediction_file) as f:
@@ -135,7 +134,7 @@ if __name__ == '__main__':
     elif args.dataset_type == 'open_images':
         dataset = OpenImagesDataset(args.dataset, dataset_type="test")
     elif args.dataset_type == 'coco':
-        dataset = CocoDataset(args.dataset, args.annfile)
+        dataset = CocoDatasetTest(args.dataset, args.annfile)
 
     true_case_stat, all_gb_boxes, all_difficult_cases = group_annotation_by_class(dataset)
     if args.net == 'vgg16-ssd':
@@ -202,7 +201,7 @@ if __name__ == '__main__':
         ], dim=1))
     results = torch.cat(results)
     for class_index, class_name in enumerate(class_names):
-        if class_index == 0 or class_name == '_':
+        if class_index == 0:
             continue  # ignore background
         prediction_path = eval_path / f"det_test_{class_name}.txt"
         with open(prediction_path, "w") as f:
@@ -218,7 +217,7 @@ if __name__ == '__main__':
     print("\n\nAverage Precision Per-class:")
     for class_index, class_name in enumerate(class_names):
         # coco class has _ name
-        if class_index == 0 or class_name == '_':
+        if class_index == 0:
             continue
         prediction_path = eval_path / f"det_test_{class_name}.txt"
         ap = compute_average_precision_per_class(

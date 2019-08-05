@@ -447,6 +447,24 @@ class CocoDatasetTest:
             image, _ = self.transform(image)
         return image
 
+    # for eval
+    def get_annotation(self, index):
+        img_id = self.ids[index]
+        return str(img_id), self._get_annotation(img_id)
+
+    def _get_annotation(self, img_id):
+        coco = self.coco
+        ann_ids = coco.getAnnIds(imgIds=img_id)
+        ann = coco.loadAnns(ann_ids)
+
+        boxes = np.array([self._xywh2xyxy(obj["bbox"]) for obj in ann], np.float32).reshape((-1, 4))
+        labels = np.array([self.json_category_id_to_contiguous_id[obj["category_id"]] for obj in ann], np.int64).reshape((-1,))
+        boxes = np.array(boxes, dtype=np.float32)
+        labels = np.array(labels, dtype=np.int64)
+        is_difficult = np.zeros(np.shape(labels)[0], dtype=np.uint8)
+
+        return (boxes, labels, is_difficult)
+
 if __name__ == '__main__':
     import sys
     coco = CocoDataset(sys.argv[1], sys.argv[2])
