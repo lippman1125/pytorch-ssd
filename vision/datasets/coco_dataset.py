@@ -451,6 +451,10 @@ class CocoDatasetTest:
     def get_annotation(self, index):
         img_id = self.ids[index]
         return str(img_id), self._get_annotation(img_id)
+    
+    def _xywh2xyxy(self, box):
+        x1, y1, w, h = box
+        return [x1, y1, x1 + w, y1 + h]
 
     def _get_annotation(self, img_id):
         coco = self.coco
