@@ -3,7 +3,7 @@ import torch
 from ..utils import box_utils
 from .data_preprocessing import PredictionTransform
 from ..utils.misc import Timer
-from ..utils.nms_gpu.nms import gpu_nms
+from ..utils.nms_gpu.nms.gpu_nms import gpu_nms
 
 class Predictor:
     def __init__(self, net, size, mean=0.0, std=1.0, nms_method=None,
