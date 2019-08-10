@@ -32,6 +32,8 @@ parser.add_argument("--eval_dir", default="eval_results", type=str, help="The di
 parser.add_argument('--mb2_width_mult', default=1.0, type=float,
                     help='Width Multiplifier for MobilenetV2')
 parser.add_argument("--nms_method", type=str, default="hard")
+parser.add_argument("--nms_gpu", action='store_true', help="apply nms on gpu")
+
 args = parser.parse_args()
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() and args.use_cuda else "cpu")
 
@@ -80,11 +82,14 @@ if __name__ == '__main__':
     elif args.net == 'mb2-ssd-lite':
         predictor = create_mobilenetv2_ssd_lite_predictor(net, nms_method=args.nms_method, device=DEVICE)
     elif args.net == 'mb2-ssd-lite-xiaomi':
-        predictor = create_mobilenetv2_ssd_lite_predictor_xiaomi(net, nms_method=args.nms_method, device=DEVICE)
+        predictor = create_mobilenetv2_ssd_lite_predictor_xiaomi(net, nms_method=args.nms_method, device=DEVICE,
+                                                                 nms_gpu=args.nms_gpu)
     elif args.net == 'fairnas-a-ssd-lite':
-        predictor = create_fairnas_a_ssd_lite_predictor(net, nms_method=args.nms_method, device=DEVICE)
+        predictor = create_fairnas_a_ssd_lite_predictor(net, nms_method=args.nms_method, device=DEVICE,
+                                                        nms_gpu=args.nms_gpu)
     elif args.net == 'fairnas-b-ssd-lite':
-        predictor = create_fairnas_b_ssd_lite_predictor(net, nms_method=args.nms_method, device=DEVICE)
+        predictor = create_fairnas_b_ssd_lite_predictor(net, nms_method=args.nms_method, device=DEVICE,
+                                                        nms_gpu=args.nms_gpu)
     else:
         logging.fatal("The net type is wrong. It should be one of vgg16-ssd, mb1-ssd and mb1-ssd-lite.")
         parser.print_help(sys.stderr)

@@ -3,18 +3,18 @@ import torch
 from ..utils import box_utils
 from .data_preprocessing import PredictionTransform
 from ..utils.misc import Timer
-# from ..utils.nms_gpu.nms.gpu_nms import gpu_nms
-
+from ..utils.nms_gpu.nms import gpu_nms
 
 class Predictor:
     def __init__(self, net, size, mean=0.0, std=1.0, nms_method=None,
-                 iou_threshold=0.45, filter_threshold=0.01, candidate_size=200, sigma=0.5, device=None):
+                 iou_threshold=0.45, filter_threshold=0.01, candidate_size=200, sigma=0.5, device=None, nms_gpu=False):
         self.net = net
         self.transform = PredictionTransform(size, mean, std)
         self.iou_threshold = iou_threshold
         self.filter_threshold = filter_threshold
         self.candidate_size = candidate_size
         self.nms_method = nms_method
+        self.nms_gpu = nms_gpu
 
         self.sigma = sigma
         if device:
@@ -54,27 +54,30 @@ class Predictor:
                 continue
             subset_boxes = boxes[mask, :]
             box_probs = torch.cat([subset_boxes, probs.reshape(-1, 1)], dim=1)
-            box_probs = box_utils.nms(box_probs, self.nms_method,
-                                      score_threshold=prob_threshold,
-                                      iou_threshold=self.iou_threshold,
-                                      sigma=self.sigma,
-                                      top_k=top_k,
-                                      candidate_size=self.candidate_size)
-            # convert tensor to numpy
-            # box_probs[:, 0] *= width
-            # box_probs[:, 1] *= height
-            # box_probs[:, 2] *= width
-            # box_probs[:, 3] *= height
-            # keep_id = gpu_nms(box_probs.numpy(), 0.45, device_id = 0)
-            # keep_id = keep_id[:200]
-            # box_probs = box_probs[keep_id, :]
+            if not self.nms_gpu:
+                box_probs = box_utils.nms(box_probs, self.nms_method,
+                                          score_threshold=prob_threshold,
+                                          iou_threshold=self.iou_threshold,
+                                          sigma=self.sigma,
+                                          top_k=top_k,
+                                          candidate_size=self.candidate_size)
+            else:
+                # convert tensor to numpy
+                box_probs[:, 0] *= width
+                box_probs[:, 1] *= height
+                box_probs[:, 2] *= width
+                box_probs[:, 3] *= height
+                keep_id = gpu_nms(box_probs.numpy(), self.iou_threshold, device_id = 0)
+                keep_id = keep_id[:self.candidate_size]
+                box_probs = box_probs[keep_id, :]
             picked_box_probs.append(box_probs)
             picked_labels.extend([class_index] * box_probs.size(0))
         if not picked_box_probs:
             return torch.tensor([]), torch.tensor([]), torch.tensor([])
         picked_box_probs = torch.cat(picked_box_probs)
-        picked_box_probs[:, 0] *= width
-        picked_box_probs[:, 1] *= height
-        picked_box_probs[:, 2] *= width
-        picked_box_probs[:, 3] *= height
+        if not self.nms_gpu:
+            picked_box_probs[:, 0] *= width
+            picked_box_probs[:, 1] *= height
+            picked_box_probs[:, 2] *= width
+            picked_box_probs[:, 3] *= height
         return picked_box_probs[:, :4], torch.tensor(picked_labels), picked_box_probs[:, 4]
