@@ -209,26 +209,44 @@ class CocoDataset:
         img_id = self.ids[index]
         return str(img_id), self._get_annotation(img_id)
 
-    def _get_annotation(self, img_id):
-        coco = self.coco
-        ann_ids = coco.getAnnIds(imgIds=img_id)
-        anns = coco.loadAnns(ann_ids)
+    # def _get_annotation(self, img_id):
+    #     coco = self.coco
+    #     ann_ids = coco.getAnnIds(imgIds=img_id)
+    #     anns = coco.loadAnns(ann_ids)
+    #
+    #     boxes = []
+    #     labels = []
+    #     for ann in anns:
+    #         # ann['bbox'][2:] += ann['bbox'][:2]
+    #         x1,y1,w,h = ann['bbox'][0], ann['bbox'][1], ann['bbox'][2], ann['bbox'][3]
+    #         # limit box size
+    #         if w<=1 or h <=1:
+    #             continue
+    #         boxes.append(np.array([x1,y1,x1+w-1,y1+h-1], dtype=np.float32))
+    #         labels.append(ann['category_id'])
+    #     boxes = np.array(boxes, dtype=np.float32)
+    #     labels = np.array(labels, dtype=np.int64)
+    #     is_difficult = np.zeros(np.shape(labels)[0], dtype=np.uint8)
+    #
+    #     return (boxes, labels, is_difficult)
 
-        boxes = []
-        labels = []
-        for ann in anns:
-            # ann['bbox'][2:] += ann['bbox'][:2]
-            x1,y1,w,h = ann['bbox'][0], ann['bbox'][1], ann['bbox'][2], ann['bbox'][3]
-            # limit box size
-            if w<=1 or h <=1:
-                continue
-            boxes.append(np.array([x1,y1,x1+w-1,y1+h-1], dtype=np.float32))
-            labels.append(ann['category_id'])
-        boxes = np.array(boxes, dtype=np.float32)
-        labels = np.array(labels, dtype=np.int64)
+    def _get_annotation(self, image_id):
+        ann_ids = self.coco.getAnnIds(imgIds=image_id)
+        ann = self.coco.loadAnns(ann_ids)
+        # filter crowd annotations
+        ann = [obj for obj in ann if obj["iscrowd"] == 0]
+        boxes = np.array([self._xywh2xyxy(obj["bbox"]) for obj in ann], np.float32).reshape((-1, 4))
+        labels = np.array([self.json_category_id_to_contiguous_id[obj["category_id"]] for obj in ann], np.int64).reshape((-1,))
+        # remove invalid boxes
+        keep = (boxes[:, 3] > boxes[:, 1]) & (boxes[:, 2] > boxes[:, 0])
+        boxes = boxes[keep]
+        labels = labels[keep]
         is_difficult = np.zeros(np.shape(labels)[0], dtype=np.uint8)
-
         return (boxes, labels, is_difficult)
+
+    def _xywh2xyxy(self, box):
+        x1, y1, w, h = box
+        return [x1, y1, x1 + w, y1 + h]
 
 class CocoDatasetOpt:
     class_names = ('__background__',
