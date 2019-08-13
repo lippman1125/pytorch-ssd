@@ -4,6 +4,8 @@ import os.path
 import cv2
 import numpy as np
 
+OVERSAMPLE = 1000
+
 def _count_visible_keypoints(anno):
     return sum(sum(1 for v in ann["keypoints"][2::3] if v > 0) for ann in anno)
 
@@ -36,28 +38,6 @@ class CocoDataset:
     """
 
     def __init__(self, root, annFile, transform=None, target_transform=None, transforms=None):
-        from pycocotools.coco import COCO
-        self.coco = COCO(annFile)
-        self.ids = list(sorted(self.coco.imgs.keys()))
-        self.root = root
-        self.transform = transform
-        self.target_transform = target_transform
-        # filter images without detection annotations
-        ids = []
-        for img_id in self.ids:
-            ann_ids = self.coco.getAnnIds(imgIds=img_id, iscrowd=None)
-            anno = self.coco.loadAnns(ann_ids)
-            if has_valid_annotation(anno):
-                ids.append(img_id)
-        self.ids = ids
-        self.json_category_id_to_contiguous_id = {
-            v: i + 1 for i, v in enumerate(self.coco.getCatIds())
-        }
-        self.contiguous_category_id_to_json_id = {
-            v: k for k, v in self.json_category_id_to_contiguous_id.items()
-        }
-        print(self.json_category_id_to_contiguous_id)
-        print(self.contiguous_category_id_to_json_id)
         self.class_names = [
         '__background__',
         'person',
@@ -139,8 +119,49 @@ class CocoDataset:
         'scissors',
         'teddy bear',
         'hair drier',
-        'toothbrush' 
+        'toothbrush'
         ]
+        from pycocotools.coco import COCO
+        self.coco = COCO(annFile)
+        coco_oversample = list()
+        for cls in self.class_names[1:]:
+            catIds = coco.getCatIds(catNms=cls)
+            imgIds = coco.getImgIds(catIds=catIds)
+            print("class {}: {}".format(cls, len(imgIds)))
+            oversample = list()
+            if len(imgIds) < OVERSAMPLE:
+                extra = OVERSAMPLE - len(imgIds)
+                while extra > 0:
+                    if len(imgIds) < extra:
+                        oversample.append(imgIds)
+                        extra -= len(imgIds)
+                    else:
+                        oversample.append(imgIds[:extra])
+                        extra = 0
+                print("oversample class {}: {}".format(cls, oversample))
+                coco_oversample.extend(oversample)
+
+        self.ids = list(sorted(self.coco.imgs.keys()))
+        self.ids.extend(coco_oversample)
+        self.root = root
+        self.transform = transform
+        self.target_transform = target_transform
+        # filter images without detection annotations
+        ids = []
+        for img_id in self.ids:
+            ann_ids = self.coco.getAnnIds(imgIds=img_id, iscrowd=None)
+            anno = self.coco.loadAnns(ann_ids)
+            if has_valid_annotation(anno):
+                ids.append(img_id)
+        self.ids = ids
+        self.json_category_id_to_contiguous_id = {
+            v: i + 1 for i, v in enumerate(self.coco.getCatIds())
+        }
+        self.contiguous_category_id_to_json_id = {
+            v: k for k, v in self.json_category_id_to_contiguous_id.items()
+        }
+        print(self.json_category_id_to_contiguous_id)
+        print(self.contiguous_category_id_to_json_id)
  
     def __getitem__(self, index):
         """
