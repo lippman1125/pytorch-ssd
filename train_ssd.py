@@ -376,6 +376,8 @@ if __name__ == '__main__':
             net.init_from_fairnas_a_base_net(args.base_net)
         elif args.net == 'fairnas-b-ssd-lite':
             net.init_from_fairnas_b_base_net(args.base_net)
+        elif args.net == 'vgg16-ssd':
+            net.init_from_vgg16_base_net(args.base_net)
         else:
             net.init_from_base_net(args.base_net)
     elif args.pretrained_ssd:

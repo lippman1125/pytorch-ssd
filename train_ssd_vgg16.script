@@ -1,0 +1,12 @@
+CUDA_VISIBLE_DEVICES=0 python3 train_ssd.py --dataset_type voc  \
+                                            --datasets ./VOCdevkit/VOC2007/ ./VOCdevkit/VOC2012/ \
+                                            --validation_dataset ./VOCdevkit/VOC2007/ \
+                                            --net vgg16-ssd \
+                                            --base_net models/vgg16_reducedfc.pth \
+                                            --scheduler multi-step \
+                                            --batch_size 32 \
+                                            --lr 0.001 \
+                                            --validation_epochs 5 \
+                                            --num_epochs 200 \
+                                            --milestones 120,160 \
+                                            --num_workers 6  
