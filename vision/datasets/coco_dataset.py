@@ -1,6 +1,7 @@
 from PIL import Image
 import os
 import os.path
+import random
 import cv2
 import numpy as np
 
@@ -123,26 +124,28 @@ class CocoDataset:
         ]
         from pycocotools.coco import COCO
         self.coco = COCO(annFile)
+        '''
         coco_oversample = list()
         for cls in self.class_names[1:]:
-            catIds = coco.getCatIds(catNms=cls)
-            imgIds = coco.getImgIds(catIds=catIds)
+            catIds = self.coco.getCatIds(catNms=cls)
+            imgIds = self.coco.getImgIds(catIds=catIds)
             print("class {}: {}".format(cls, len(imgIds)))
             oversample = list()
             if len(imgIds) < OVERSAMPLE:
                 extra = OVERSAMPLE - len(imgIds)
                 while extra > 0:
                     if len(imgIds) < extra:
-                        oversample.append(imgIds)
+                        oversample.extend(imgIds)
                         extra -= len(imgIds)
                     else:
-                        oversample.append(imgIds[:extra])
+                        oversample.extend(imgIds[:extra])
                         extra = 0
                 print("oversample class {}: {}".format(cls, oversample))
                 coco_oversample.extend(oversample)
-
+        '''
         self.ids = list(sorted(self.coco.imgs.keys()))
-        self.ids.extend(coco_oversample)
+        # self.ids.extend(coco_oversample)
+        random.shuffle(self.ids)
         self.root = root
         self.transform = transform
         self.target_transform = target_transform
@@ -183,6 +186,8 @@ class CocoDataset:
         boxes = []
         labels = []
         for ann in anns:
+            # if ann["iscrowd"] == 1:
+            #     continue
             # ann['bbox'][2:] += ann['bbox'][:2]
             x1,y1,w,h = ann['bbox'][0], ann['bbox'][1], ann['bbox'][2], ann['bbox'][3]
             # limit box size

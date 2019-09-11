@@ -45,26 +45,26 @@ def create_mobilenetv2_ssd_lite_xiaomi(num_classes, width_mult=1.0, use_batch_no
         InvertedResidual(1280, 512, stride=2, expand_ratio=0.2),
         InvertedResidual(512, 256, stride=2, expand_ratio=0.25),
         InvertedResidual(256, 256, stride=2, expand_ratio=0.5),
-        InvertedResidual(256, 64, stride=2, expand_ratio=0.25)
+        InvertedResidual(256, 128, stride=2, expand_ratio=0.25)
     ])
 
     regression_headers = ModuleList([
-        SeperableConv2d(in_channels=round(576 * width_mult), out_channels=6 * 4,
+        SeperableConv2d(in_channels=round(576 * width_mult), out_channels=4 * 4,
                         kernel_size=3, padding=1, onnx_compatible=False),
         SeperableConv2d(in_channels=1280, out_channels=6 * 4, kernel_size=3, padding=1, onnx_compatible=False),
         SeperableConv2d(in_channels=512, out_channels=6 * 4, kernel_size=3, padding=1, onnx_compatible=False),
         SeperableConv2d(in_channels=256, out_channels=6 * 4, kernel_size=3, padding=1, onnx_compatible=False),
         SeperableConv2d(in_channels=256, out_channels=6 * 4, kernel_size=3, padding=1, onnx_compatible=False),
-        Conv2d(in_channels=64, out_channels=6 * 4, kernel_size=1),
+        SeperableConv2d(in_channels=128, out_channels=6 * 4, kernel_size=1),
     ])
 
     classification_headers = ModuleList([
-        SeperableConv2d(in_channels=round(576 * width_mult), out_channels=6 * num_classes, kernel_size=3, padding=1),
+        SeperableConv2d(in_channels=round(576 * width_mult), out_channels=4 * num_classes, kernel_size=3, padding=1),
         SeperableConv2d(in_channels=1280, out_channels=6 * num_classes, kernel_size=3, padding=1),
         SeperableConv2d(in_channels=512, out_channels=6 * num_classes, kernel_size=3, padding=1),
         SeperableConv2d(in_channels=256, out_channels=6 * num_classes, kernel_size=3, padding=1),
         SeperableConv2d(in_channels=256, out_channels=6 * num_classes, kernel_size=3, padding=1),
-        Conv2d(in_channels=64, out_channels=6 * num_classes, kernel_size=1),
+        SeperableConv2d(in_channels=128, out_channels=6 * num_classes, kernel_size=1),
     ])
 
     return SSD(num_classes, base_net, source_layer_indexes,
