@@ -149,7 +149,7 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1, 
             labels = data[0]["labels"]
             labels = labels.type(torch.cuda.LongTensor)
             boxes = convert_boxes_to_locations(boxes,
-                                               dboxes320_mv2_coco()(order="xywh"),
+                                               dboxes320_mv2_coco(config.specs)(order="xywh"),
                                                config.center_variance,
                                                config.size_variance)
             boxes = boxes.contiguous().cuda()
@@ -243,7 +243,14 @@ if __name__ == '__main__':
     target_transform = MatchPrior(config.priors, config.center_variance,
                                   config.size_variance, 0.5)
 
-    test_transform = TestTransform(config.image_size, config.image_mean, config.image_std)
+    if not args.dali:
+        test_transform = TestTransform(config.image_size, config.image_mean, config.image_std)
+    else:
+        test_transform = TestTransform(config.image_size,
+                                       # mean
+                                       [0.485 * 255, 0.456 * 255, 0.406 * 255],
+                                       # std
+                                       [0.229 * 255, 0.224 * 255, 0.225 * 255])
 
     if not os.path.exists(args.checkpoint_folder):
         os.makedirs(args.checkpoint_folder)
@@ -272,6 +279,10 @@ if __name__ == '__main__':
                     dataset_path,
                     args.annfile[idx],
                     args.batch_size,
+                    # mean
+                    [0.485 * 255, 0.456 * 255, 0.406 * 255],
+                    # std
+                    [0.229 * 255, 0.224 * 255, 0.225 * 255],
                     0,  # rank
                     args.num_workers,
                     1,  # ngpus

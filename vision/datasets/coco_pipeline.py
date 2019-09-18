@@ -5,7 +5,7 @@ import nvidia.dali.types as types
 from nvidia.dali.plugin.pytorch import DALIGenericIterator
 
 class COCOPipeline(Pipeline):
-    def __init__(self, default_boxes, root, annFile, batch_size,
+    def __init__(self, default_boxes, root, annFile, batch_size, mean, std,
                  local_rank, num_workers, seed):
         super(COCOPipeline, self).__init__(
             batch_size=batch_size,
@@ -55,8 +55,8 @@ class COCOPipeline(Pipeline):
         self.normalize = ops.CropMirrorNormalize(
             device="gpu",
             crop=(320, 320),
-            mean=[127.0, 127.0, 127.0],
-            std=[128.0, 128.0, 128.0],
+            mean=mean,
+            std=std,
             mirror=0,
             output_dtype=types.FLOAT,
             output_layout=types.NCHW,
@@ -107,12 +107,14 @@ class COCOPipeline(Pipeline):
 
 
 def get_train_dali_loader(default_boxes, root, annFile, batch_size,
-                 local_rank, num_workers, ngpus, local_seed):
+                 mean, std, local_rank, num_workers, ngpus, local_seed):
     train_pipe = COCOPipeline(
         default_boxes,
         root,
         annFile,
         batch_size,
+        mean,
+        std,
         local_rank,
         num_workers,
         seed=local_seed)
