@@ -12,15 +12,16 @@ iou_threshold = 0.6
 center_variance = 0.1
 size_variance = 0.2
 
-# specs = [
-#     SSDSpec(20, 16, SSDBoxSizes(60, 105), [2]),
-#     SSDSpec(10, 32, SSDBoxSizes(105, 150), [2, 3]),
-#     SSDSpec(5, 64, SSDBoxSizes(150, 195), [2, 3]),
-#     SSDSpec(3, 100, SSDBoxSizes(195, 240), [2, 3]),
-#     SSDSpec(2, 150, SSDBoxSizes(240, 285), [2, 3]),
-#     SSDSpec(1, 300, SSDBoxSizes(285, 300), [2, 3])
-# ]
-
+'''
+specs = [
+    SSDSpec(20, 16, SSDBoxSizes(60, 105), [2]),
+    SSDSpec(10, 32, SSDBoxSizes(105, 150), [2, 3]),
+    SSDSpec(5, 64, SSDBoxSizes(150, 195), [2, 3]),
+    SSDSpec(3, 100, SSDBoxSizes(195, 240), [2, 3]),
+    SSDSpec(2, 150, SSDBoxSizes(240, 285), [2, 3]),
+    SSDSpec(1, 300, SSDBoxSizes(285, 300), [2, 3])
+]
+'''
 specs = [
     # feature size : stride : box size : box ratio
     SSDSpec(20, 16, SSDBoxSizes(30, 60), [2]),
@@ -30,6 +31,7 @@ specs = [
     SSDSpec(2, 150, SSDBoxSizes(213, 264), [2, 3]),
     SSDSpec(1, 300, SSDBoxSizes(264, 300), [2, 3])
 ]
+
 
 '''
 specs = [
