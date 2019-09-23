@@ -135,6 +135,6 @@ def get_train_dali_loader(default_boxes, root, annFile, batch_size,
         train_pipe,
         ["images", "boxes", "labels"],
         118287 / ngpus,
-        stop_at_epoch=False)
+        auto_reset=False)
 
     return train_loader

@@ -4,14 +4,14 @@ CUDA_VISIBLE_DEVICES=0 python3 train_ssd.py --dataset_type coco  \
                                             --validation_dataset ./coco2017/val2017_dali/ \
                                             --val_annfile ./coco2017/annotations/instances_val2017.json \
                                             --net mb2-ssd-lite-xiaomi \
-                                            --base_net models/mv2.pth \
+                                            --base_net models/mv2_72.5.pth \
                                             --optimizer SGD \
                                             --scheduler multi-step \
-                                            --milestones 90,120 \
+                                            --milestones 90,180,270 \
                                             --lr 0.02 \
                                             --batch_size 128 \
-                                            --t_max 200 \
-                                            --validation_epochs 10 \
-                                            --num_epochs 150 \
-                                            --num_workers 6 \
+                                            --t_max 360 \
+                                            --validation_epochs 5 \
+                                            --num_epochs 360 \
+                                            --num_workers 4 \
                                             --dali

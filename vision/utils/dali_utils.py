@@ -341,34 +341,36 @@ def dboxes300_coco():
     return dboxes
 
 
-# def dboxes320_mv2_coco():
-#     figsize = 320
-#     feat_size = [20, 10, 5, 3, 2, 1]
-#     steps = [16, 32, 64, 100, 150, 300]
-#     # use the scales here: https://github.com/amdegroot/ssd.pytorch/blob/master/data/config.py
-#     scales = [30, 60, 111, 162, 213, 264, 315]
-#     aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2,3], [2,3]]
-#     dboxes = DefaultBoxes(figsize, feat_size, steps, scales, aspect_ratios)
-#     return dboxes
+def dboxes320_mv2_coco():
+    figsize = 320
+    feat_size = [20, 10, 5, 3, 2, 1]
+    steps = [16, 32, 64, 100, 150, 300]
+    # use the scales here: https://github.com/amdegroot/ssd.pytorch/blob/master/data/config.py
+    scales = [30, 60, 111, 162, 213, 264, 315]
+    aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2,3], [2,3]]
+    dboxes = DefaultBoxes(figsize, feat_size, steps, scales, aspect_ratios)
+    return dboxes
 
+'''
 def dboxes320_mv2_coco(specs):
     figsize = 320
     feat_size = list()
     steps = list()
     scales = list()
     aspect_ratios = list()
-    scales.append(specs[0].boxsizes.min)
+    scales.append(specs[0].box_sizes.min)
     for spec in specs:
         feat_size.append(spec.feature_map_size)
         steps.append(spec.shrinkage)
-        scales.append(spec.boxsizes.max)
+        scales.append(spec.box_sizes.max)
         aspect_ratios.append(spec.aspect_ratios)
-    print("feat_size={}".format(feat_size))
-    print("steps={}".format(steps))
-    print("scales={}".format(scales))
-    print("aspect_ratios={}".format(aspect_ratios))
+    # print("feat_size={}".format(feat_size))
+    # print("steps={}".format(steps))
+    # print("scales={}".format(scales))
+    # print("aspect_ratios={}".format(aspect_ratios))
     dboxes = DefaultBoxes(figsize, feat_size, steps, scales, aspect_ratios)
     return dboxes
+'''
 
 # This function is from https://github.com/chauhan-utk/ssd.DomainAdaptation.
 class SSDCropping(object):
