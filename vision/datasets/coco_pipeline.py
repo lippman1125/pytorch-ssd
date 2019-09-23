@@ -35,6 +35,12 @@ class COCOPipeline(Pipeline):
         self.decode = ops.nvJPEGDecoder(device="mixed", output_type=types.RGB)
 
         # Augumentation techniques
+        # expand 1~2
+        self.paste_ratio = ops.Uniform(range=[1, 2])
+        self.paste_pos = ops.Uniform(range=[0, 1])
+        self.paste = ops.Paste(device="gpu", fill_value=tuple(mean))
+        self.bbpaste = ops.BBoxPaste(device="cpu", ltrb=True)
+        # random crop
         self.crop = ops.RandomBBoxCrop(
             device="cpu",
             aspect_ratio=[0.5, 2.0],
@@ -86,23 +92,29 @@ class COCOPipeline(Pipeline):
 
         inputs, bboxes, labels = self.input(name="Reader")
         images = self.decode(inputs)
-
-        crop_begin, crop_size, bboxes, labels = self.crop(bboxes, labels)
-        images = self.slice(images, crop_begin, crop_size)
-
-        images = self.flip(images, horizontal=coin_rnd)
-        bboxes = self.bbflip(bboxes, horizontal=coin_rnd)
-        images = self.resize(images)
-        images = images.gpu()
+        # color distort
         images = self.twist(
             images,
             saturation=saturation,
             contrast=contrast,
             brightness=brightness,
             hue=hue)
+        # expand 1~2
+        ratio = self.paste_ratio()
+        px = self.paste_pos()
+        py = self.paste_pos()
+        images = self.paste(images, paste_x=px, paste_y=py, ratio=ratio)
+        bboxes = self.bbpaste(bboxes, paste_x=px, paste_y=py, ratio=ratio)
+        # random crop
+        crop_begin, crop_size, bboxes, labels = self.crop(bboxes, labels)
+        images = self.slice(images, crop_begin, crop_size)
+        # random flip
+        images = self.flip(images, horizontal=coin_rnd)
+        bboxes = self.bbflip(bboxes, horizontal=coin_rnd)
+        images = self.resize(images)
+        images = images.gpu()
         images = self.normalize(images)
         bboxes, labels = self.box_encoder(bboxes, labels)
-
         return (images, bboxes, labels)
 
 
